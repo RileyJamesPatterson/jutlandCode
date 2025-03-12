@@ -1,5 +1,5 @@
-shipId,xCorStart,yCorStart,headingStart,name,fleet,shipClass,vanOrder,destinationX,destinationY,maxTurn,speed,turrets,TorpedoTubes,hullPoints,sunk
-1,-45,92,50,Iron Duke,British,Battleship,1,0,90,25,2,Array,Array,20,0
-2,-50,91,50,Dreadnought,British,Battleship,2,0,90,25,2,Array,Array,20,0
-3,-45,80,45,Lutzow,German,Battleship,1,0,90,25,2,Array,Array,20,0
-4,-46,79,45,Ostfriesland,German,Battleship,2,0,90,25,2,Array,Array,20,0
+shipId,xCorStart,yCorStart,headingStart,name,fleet,shipClass,vanOrder,destinationX,destinationY,maxTurn,speed,gunCaliber,maxGunRange,gunRateOfFire,bowGuns,sternGuns,portGuns,starbGuns,torpedoTubes ,hullPoints,sunk
+1,-45,92,50,Iron Duke,British,Battleship,1,0,90,25,2,12,90,1.33,2,4,2,2,0,20,0
+2,-50,91,50,Dreadnought,British,Battleship,2,0,90,25,2,12,90,1.33,2,4,2,2,0,20,0
+3,-45,80,45,Lutzow,German,Battleship,1,0,90,25,2,13,90,1.33,2,4,2,2,0,20,0
+4,-46,79,45,Ostfriesland,German,Battleship,2,0,90,25,2,13,90,1.33,2,4,2,2,0,20,0

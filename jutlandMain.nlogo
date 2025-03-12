@@ -13,22 +13,26 @@ breed [turtleTopedoes turtleTorpedo]
 
 ; ### Declare Agent Variables ###
 turtleShips-own [
-  shipId
-  ;xCorStart
-  ;yCorStart
-  ;headingStart
-  name
-  fleet
-  shipClass
-  vanOrder
-  destinationX
-  destinationY
-  maxTurn
-  speed
-  turrets
-  torpedoTubes
-  hullPoints
-  sunk
+  shipId       ;Imported from orderOfBattle.csv
+  name         ;Imported from orderOfBattle.csv
+  fleet        ;Imported from orderOfBattle.csv
+  enemyfleet   ;calculated
+  shipClass    ;Imported from orderOfBattle.csv
+  vanOrder     ;Imported from orderOfBattle.csv
+  destinationX ;Imported from orderOfBattle.csv
+  destinationY ;Imported from orderOfBattle.csv
+  maxTurn      ;Imported from orderOfBattle.csv
+  speed        ;Imported from orderOfBattle.csv
+  gunCaliber   ;Imported from orderOfBattle.csv
+  maxGunRange  ;Imported from orderOfBattle.csv
+  gunRateOfFire ;Imported from orderOfBattle.csv
+  bowGuns      ;Imported from orderOfBattle.csv
+  sternGuns    ;Imported from orderOfBattle.csv
+  portGuns     ;Imported from orderOfBattle.csv
+  starbGuns    ;Imported from orderOfBattle.csv
+  torpedoTubes ;Imported from orderOfBattle.csv
+  hullPoints   ;Imported from orderOfBattle.csv
+  sunk         ;calculated - starts as 0
 
 ]
 
@@ -59,19 +63,25 @@ to setup-turtleShips
       set shipId item 0 rowdata
       set xcor item 1 rowdata
       set ycor item 2 rowdata
-      set heading item 3 rowdata
-      set name item 4 rowdata
-      set fleet item 5 rowdata
-      set shipClass item 6 rowdata
-      set vanOrder item 7 rowdata
-      set destinationX item 8 rowdata
-      set destinationY item 9 rowdata
-      set maxTurn item 10 rowdata
-      set speed item 11 rowdata
-      set turrets item 12 rowdata ;placeholder need to figure out how to encode and parse turrets
-      set torpedoTubes item 13 rowdata ;placeholder need to figure out how to encode and parse torp tubes
-      set hullpoints item 14 rowdata
-      set sunk item 15 rowdata
+      set heading item 3 rowdata ; Azimuth 0-360
+      set name item 4 rowdata ; name of ship as string
+      set fleet item 5 rowdata ; str: "British" or "German"
+      set shipClass item 6 rowdata; str: "Battleship" or "Destroyer"
+      set vanOrder item 7 rowdata ; not currently used
+      set destinationX item 8 rowdata ; xcor of destination patch
+      set destinationY item 9 rowdata ; ycor of destination patch
+      set maxTurn item 10 rowdata ; max ship can turn in degrees per tick
+      set speed item 11 rowdata ; speed ship moves - patches per tick
+      set gunCaliber item 12 rowdata ;Primary weapon calbier in inches
+      set maxGunRange item 13 rowdata ; max range to look for targets within
+      set gunRateOfFire item 14 rowdata ; rate of fire, shots per tick
+      set bowGuns item 15 rowdata ; number of guns with arc b/w -90 and 90 degrees
+      set sternGuns item 16 rowdata ; number of guns with arc b/w 90 and 270 degrees
+      set portGuns item 17 rowdata ; number of guns with arc b/w 180 and 360 degrees
+      set starbGuns item 18 rowdata; number of guns with arb b/w 0 and 180 degrees
+      set torpedoTubes item 19 rowdata ;placeholder need to figure out how to encode and parse torp tubes
+      set hullPoints item 20 rowdata
+      set sunk 0
     ]
   ]
   file-close-all
@@ -79,11 +89,15 @@ to setup-turtleShips
     if fleet = "British"[
       ;set up visuals of British Fleet
       set color red ;placeholder
+
+      set enemyFleet "German" ;populated calculated attribute
     ]
 
     if fleet = "German"[
       ;set up visuals of German Fleet
       set color black ;p laceholder
+
+      set enemyFleet "British"
     ]
   ]
 
@@ -110,10 +124,15 @@ to move-turtleShips
   if ticks > GermanDisengageSignalTick + BritishDelay [ ;british delay set by slider
 
     if BritishSignal = "Engage"[;BritishSignal Set by User via chooser
-
       let possibleTargets turtles with [fleet = "German"]
-
+      ask turtleShips with [fleet = "British"][
+        let closestTarget min-one-of possibleTargets [distance myself] ; finds closest hostile
+        ;set destination to postion of closest hostile
+        set destinationX [xcor] of closestTarget
+        set destinationY [ycor] of closestTarget
+      ]
     ]
+
     if britishSignal = "Disengage"[;   BritishSignal Set by User via chooser
       ;define behaviour of british ships if signal is "Disengage"
       let hostiles turtles with [fleet != "British"] ;get the set of things to evade
@@ -127,7 +146,7 @@ to move-turtleShips
         show "AgentDist"
         show distance hostilesDestination
         if hostileDistToDest > distance hostilesDestination [ ;if ship is not between hositle and its detination
-          set destinationX [destinationX] of closestHostile ;placeholder, NEED TO FIGURE OUT EVASION SUBTRACT HEADING?
+          set destinationX [destinationX] of closestHostile ;placeholder, NEED TO FIGURE OUT EVASION SUBTRACT HEADING? IF torpedo match heading if ship head away
           set destinationY [destinationY] of closestHostile
         ]
         if hostileDistToDest <= distance hostilesDestination [ ; if ship is between target and its destination
@@ -154,6 +173,43 @@ to move-turtleShips
   ]
 end
 
+
+to shoot-turtleShips
+
+  ask turtleShips[
+    let enemyShips turtles with [ fleet = [enemyFleet] of myself ]
+
+    let enemyInArc enemyShips in-cone  90  ( [maxGunRange] of self ) ;create agentset of enemy in arc
+    let targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
+
+
+    show targetShip
+    if targetship != nobody[
+      ask patch-here [set pcolor grey]
+
+      ask targetShip [
+        set hullPoints ( [hullPoints] of self - 1 )
+        set pcolor pink
+      ]
+    ]
+
+    ;ask enemyShips in-cone  45 90 [ set pcolor green ]
+    ;show targetShip
+    ;face originalFacing
+
+
+
+    ;shoot german ships at nearest british ships
+  ;get targetSet
+
+  ]
+
+  ;shoot bow guns
+  ;shoot stern guns
+  ;shoot port guns
+  ;shoot starboard guns
+end
+
 to setup
   clear-all
   setup-patches
@@ -163,6 +219,7 @@ end
 
 to go
   move-turtleShips
+  shoot-turtleShips
   tick
 end
 @#$#@#$#@
@@ -251,7 +308,7 @@ BritishDelay
 BritishDelay
 0
 10
-2.0
+0.0
 1
 1
 Tick
