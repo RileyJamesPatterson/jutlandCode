@@ -3,8 +3,10 @@ extensions [
 ]
 ;### Declare Globals###
 globals [
-  BritishDelayTicks
-
+  BattleShipMagazineDmgBreakPoint ;imported and calculated from battleShipDamage.csv
+  BattleShipEngineDmgBreakPoint   ;imported and calculated from battleShipDamage.csv
+  BattleShipRudderDmgBreakPoint   ;imported and calculated from battleShipDamage.csv
+  BattleShipTurretDmgBreakPoint   ;imported and calculated from battleShipDamage.csv
 ]
 
 ; ### Declare Agent Breeds ###
@@ -32,7 +34,8 @@ turtleShips-own [
   starbGuns    ;Imported from orderOfBattle.csv
   torpedoTubes ;Imported from orderOfBattle.csv
   hullPoints   ;Imported from orderOfBattle.csv
-  sunk         ;calculated - starts as 0
+  damageTakenThisTick  ;calculated.
+  sunk         ;calculated, 0=unsunk 1=sunk
 
 ]
 
@@ -51,8 +54,11 @@ to setup-patches
 end
 
 to setup-turtleShips
+  ;load the attributes of ships and their fleet from the orderOfBattle.csv
   file-close-all ;protects against unfinished setups that kept csv locked
+
   file-open "orderOfBattle.csv"
+  print "=== Loading Ships from orderOfBattle.csv ==="
   let csvHeadings csv:from-row file-read-line
   print csvHeadings
   while [not file-at-end?][
@@ -82,9 +88,12 @@ to setup-turtleShips
       set torpedoTubes item 19 rowdata ;placeholder need to figure out how to encode and parse torp tubes
       set hullPoints item 20 rowdata
       set sunk 0
+      set damageTakenThisTick 0
     ]
   ]
   file-close-all
+
+  ;Set up visuals for fleets
   ask turtleShips[
     if fleet = "British"[
       ;set up visuals of British Fleet
@@ -103,27 +112,53 @@ to setup-turtleShips
 
 end
 
+to load-DamageGlobals
+  ;loads the chances of sustaining crtical damage and converts to breakpoints
+
+  file-close-all ;protects against unfinished setups that kept csv locked
+  print "=== Loading Damage Breakpoints from *Class*Damage.csv ==="
+  file-open "battleShipDamage.csv"
+  let csvHeadings csv:from-row file-read-line
+  print csvHeadings
+  let rowdata csv:from-row file-read-line
+  print rowdata
+  set BattleShipMagazineDmgBreakPoint item 1 rowdata
+  set BattleShipEngineDmgBreakPoint (item 2 rowdata + BattleShipMagazineDmgBreakPoint)
+  set BattleShipRudderDmgBreakPoint (item 3 rowdata + BattleShipEngineDmgBreakPoint)
+  set BattleShipTurretDmgBreakPoint (item 4 rowdata + BattleShipRudderDmgBreakPoint)
+  print BattleShipMagazineDmgBreakPoint
+  print BattleShipEngineDmgBreakPoint
+  print BattleShipRudderDmgBreakPoint
+  print BattleShipTurretDmgBreakPoint
+  file-close-all
+end
+
 to move-turtleShips
+  ;Move the turtleShips in 3 steps:
+  ;1-Determine Desired destination
+  ;2-adopt desired heading subject to turn rate
+  ;3-move ships forward
 
-  ;Claculate desired destination for each ship
 
-  ;German Battleships make a 180 battle about turn at GermanTurnTime, setting destination to southern edge
-  if ticks = GermanDisengageSignalTick[ ; value set by slider
+  ;Step1 - Calculate desired destination for each ship
+
+  ;German Battleships setting destination to southern edge at GermanTurnTime,
+  if ticks = GermanDisengageSignalTick[ ; value set by slider, run once (destinations static)
+    print word  ticks ":German Admiral Scheer Signals for withdrawal by individual movement"
     ask turtleShips[
       if (fleet = "German") and (shipClass = "Battleship")[
         set destinationY min-pycor
-
       ]
     ]
   ]
+  ;German destroyers either a)close with closest taget and fire torepedoes or b) withdraw if no torpedoes
+  ;run every tick >= of german signal, destinations are dynamic
 
-
-    ;After GermanTurnTime, destroyers close with closest taget, fire torepedoes and withdraw if no torpedoes
-
-    ;After GermanTurnTime+Delay, British adjust course, either closing with closest german or turning away
+  ;After GermanTurnTime+Delay, British adjust course, either closing with closest german or turning away
   if ticks > GermanDisengageSignalTick + BritishDelay [ ;british delay set by slider
 
     if BritishSignal = "Engage"[;BritishSignal Set by User via chooser
+
       let possibleTargets turtles with [fleet = "German"]
       ask turtleShips with [fleet = "British"][
         let closestTarget min-one-of possibleTargets [distance myself] ; finds closest hostile
@@ -177,30 +212,17 @@ end
 to shoot-turtleShips
 
   ask turtleShips[
-    let enemyShips turtles with [ fleet = [enemyFleet] of myself ]
+    let enemyShips turtles with [ fleet = [enemyFleet] of myself ] ;create agentset of all enemies
 
-    let enemyInArc enemyShips in-cone  90  ( [maxGunRange] of self ) ;create agentset of enemy in arc
+    ;bow guns: find enemies and fire turrents
+    let enemyInArc enemyShips in-cone  90  ( [maxGunRange] of self ) ;agentset of enemy in arc
     let targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
-
-
-    show targetShip
     if targetship != nobody[
-      ask patch-here [set pcolor grey]
-
-      ask targetShip [
-        set hullPoints ( [hullPoints] of self - 1 )
-        set pcolor pink
-      ]
+      ;shoot target with bowGuns
+      fireTurrets targetShip [bowGuns] of self
+      ask patch-here [set pcolor grey] ;placeholder for now, creates patch of grey. could generate smoke once implemented
     ]
 
-    ;ask enemyShips in-cone  45 90 [ set pcolor green ]
-    ;show targetShip
-    ;face originalFacing
-
-
-
-    ;shoot german ships at nearest british ships
-  ;get targetSet
 
   ]
 
@@ -210,16 +232,63 @@ to shoot-turtleShips
   ;shoot starboard guns
 end
 
+to fireTurrets [targetShip gunsInArc]
+  show word "taking shot at " targetShip
+  ;determine expected number of hits. Fractional hits ok.
+
+  let hitsOnTarget ( [gunRateOfFire] of self * gunsInArc * 0.03 )  ;PLACEHOLDER FOR GUNNERY MODEL 3% of shots fired at jutland hit
+  ;add more complicated fromula based on hit distribution per "An analysis of the fighting". Some relevant variables are likely range and illumination/smoke
+
+  ;accumulate expected hits to "damageTakenThisTick" field for resolution at end of tick
+  ask targetShip [
+    set damageTakenThisTick ( [damageTakenThisTick] of self + hitsOnTarget )
+    set pcolor pink ;placeholder for smoke generation on hit.
+  ]
+
+
+end
+
+to damage-turtleShips
+  ;resolve expected hits on TurtleShips
+  ask turtleships [
+    ;calculate discrete hits for purposes of assining critical damage
+    let partialHits [damageTakenThisTick] of self mod 1
+    let discreteHits floor [damageTakenThisTick] of self
+    ;account for partial hits by giving them a prorated chance of inclusion
+    if partialHits >= random-float 1 [set discreteHits discreteHits + 1]
+    repeat discreteHits [checkForCriticalDamage]
+
+
+    show word "damageTakenThisTick:" [damageTakenThisTick] of self
+    ;for each hit, check for critical damage
+    show word "partial hits " partialHits
+    show word "effective hits " discreteHits
+
+
+    ;reduce hullpoints and reset DamageTakenThisTick
+    set hullPoints ( [hullPoints] of self - [damageTakenThisTick] of self  )
+    set damageTakenThisTick 0
+
+  ]
+end
+
+to checkForCriticalDamage
+  print "check for critical"
+end
+
+;### The two main procedures ###
 to setup
   clear-all
   setup-patches
   setup-turtleShips
+  load-DamageGlobals
   reset-ticks
 end
 
 to go
   move-turtleShips
   shoot-turtleShips
+  damage-turtleShips
   tick
 end
 @#$#@#$#@
@@ -322,7 +391,7 @@ CHOOSER
 BritishSignal
 BritishSignal
 "Disengage" "Engage"
-0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
