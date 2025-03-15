@@ -1,0 +1,9 @@
+shipId,xCorStart,yCorStart,headingStart,name,fleet,shipClass,vanOrder,destinationX,destinationY,maxTurn,speed,gunCaliber,maxGunRange,gunRateOfFire,bowGuns,sternGuns,portGuns,starbGuns,torpedoTubes ,length,beam,hullPoints,sunk
+1,-45,92,50,Iron Duke,British,Battleship,1,0,90,25,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+2,-50,91,50,Dreadnought,British,Battleship,2,0,90,25,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+3,-40,90,50,Shark,British,Destroyer,3,0,90,45,3,3.5,50,15.6,0.01,1,0,0,2,70,8,2,0
+4,-41,89,50,Kestrel,British,Destroyer,4,0,90,45,3,3.5,50,15.6,0.01,1,0,0,2,70,8,2,0
+5,-45,80,45,Lutzow,German,Battleship,1,0,90,25,2,13,90,1.33,2,4,2,2,0,161,25,20,0
+6,-46,79,45,Ostfriesland,German,Battleship,2,0,90,25,2,13,90,1.33,2,4,2,2,0,161,25,20,0
+7,-43,80,45,V4,German,Destroyer,3,0,90,45,3,3.5,50,15.6,0.01,1,0,0,2,70,8,2,0
+8,-42,79,45,V5,German,Destroyer,4,0,90,45,3,3.5,50,15.6,0.01,1,0,0,2,70,8,2,0
