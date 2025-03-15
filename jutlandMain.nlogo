@@ -7,11 +7,15 @@ globals [
   BattleShipEngineDmgBreakPoint   ;imported and calculated from battleShipDamage.csv
   BattleShipRudderDmgBreakPoint   ;imported and calculated from battleShipDamage.csv
   BattleShipTurretDmgBreakPoint   ;imported and calculated from battleShipDamage.csv
+  TORPEDOSPEED
+  TORPEDOLIFETIME
+  TORPEDODAMAGE
+  TORPEDOATTACKRANGE
 ]
 
 ; ### Declare Agent Breeds ###
 breed [turtleShips turtleShip]
-breed [turtleTopedoes turtleTorpedo]
+breed [turtleTorpedoes turtleTorpedo]
 
 ; ### Declare Agent Variables ###
 turtleShips-own [
@@ -33,24 +37,36 @@ turtleShips-own [
   portGuns     ;Imported from orderOfBattle.csv
   starbGuns    ;Imported from orderOfBattle.csv
   torpedoTubes ;Imported from orderOfBattle.csv
+  shipLength   ;Imported from orderOfBattle.csv
+  shipBeam     ;Imported from orderOfBattle.csv
   hullPoints   ;Imported from orderOfBattle.csv
   damageTakenThisTick  ;calculated.
   sunk         ;calculated, 0=unsunk 1=sunk
 
 ]
 
-to-report getDistance [agent1 agent2]
-  ;a helper function to report the distance between 2 agents
-  let returnval nobody
-  ask agent1[
-    set returnval distance agent2
-  ]
-  report returnVal
-end
+turtleTorpedoes-own [
+  fleet ;set to Torpedo
+  speed ;set to Global var TORPEDOSPEED
+  lifetime ;set to Gloval var TORPEDOLIFETIME
+  detonated ;calculated 0 for undetonated, 1 for detonated
+]
 
+
+;### Procedures that run on setup. ###
+
+to setup-constants
+  set TORPEDOSPEED 3
+  set TORPEDOLIFETIME 19
+  set TORPEDODAMAGE 10
+  Set TORPEDOATTACKRANGE 40
+
+
+end
 
 to setup-patches
   ask patches [ set pcolor blue ]
+  ;PLACEHOLDER SETUP FOR INITIAL OPACITY GOES HERE
 end
 
 to setup-turtleShips
@@ -86,7 +102,9 @@ to setup-turtleShips
       set portGuns item 17 rowdata ; number of guns with arc b/w 180 and 360 degrees
       set starbGuns item 18 rowdata; number of guns with arb b/w 0 and 180 degrees
       set torpedoTubes item 19 rowdata ;placeholder need to figure out how to encode and parse torp tubes
-      set hullPoints item 20 rowdata
+      set shipLength item 20 rowdata ;length in meters. Used for torpedo detonation chance.
+      set shipBeam item 21 rowdata ; beam (width) in meters. Used for torpedo detonation chance.
+      set hullPoints item 22 rowdata
       set sunk 0
       set damageTakenThisTick 0
     ]
@@ -98,18 +116,18 @@ to setup-turtleShips
     if fleet = "British"[
       ;set up visuals of British Fleet
       set color red ;placeholder
-
       set enemyFleet "German" ;populated calculated attribute
     ]
-
     if fleet = "German"[
       ;set up visuals of German Fleet
-      set color black ;p laceholder
-
+      set color black ;placeholder
       set enemyFleet "British"
     ]
+    if shipClass = "Destroyer" [
+      set shape "arrow"
+      set size 0.7
+    ]
   ]
-
 end
 
 to load-DamageGlobals
@@ -117,21 +135,73 @@ to load-DamageGlobals
 
   file-close-all ;protects against unfinished setups that kept csv locked
   print "=== Loading Damage Breakpoints from *Class*Damage.csv ==="
+
+  print "loading Battleship Damage Breakpoints"
   file-open "battleShipDamage.csv"
   let csvHeadings csv:from-row file-read-line
   print csvHeadings
   let rowdata csv:from-row file-read-line
-  print rowdata
   set BattleShipMagazineDmgBreakPoint item 1 rowdata
   set BattleShipEngineDmgBreakPoint (item 2 rowdata + BattleShipMagazineDmgBreakPoint)
   set BattleShipRudderDmgBreakPoint (item 3 rowdata + BattleShipEngineDmgBreakPoint)
   set BattleShipTurretDmgBreakPoint (item 4 rowdata + BattleShipRudderDmgBreakPoint)
-  print BattleShipMagazineDmgBreakPoint
-  print BattleShipEngineDmgBreakPoint
-  print BattleShipRudderDmgBreakPoint
-  print BattleShipTurretDmgBreakPoint
+  print (list  BattleShipMagazineDmgBreakPoint BattleShipEngineDmgBreakPoint BattleShipRudderDmgBreakPoint BattleShipTurretDmgBreakPoint )
   file-close-all
 end
+
+;### Procedures that run on tick. ###
+
+to move-turtleTorpedoes
+  ask turtleTorpedoes[
+    ;move forward one square at a time, checking for ships on same patch
+    repeat speed[
+      forward 1
+      if detonated = 0 [
+        let shipsInDanger turtleShips-here
+        let shipSufferingDetonation nobody ;awkward helper var to record successful detonation. Used to accomodate turtle context.
+        ask shipsInDanger [
+          ;for each ship in same patch, check for torpedo detonation. If detonation occurs, set interim shipSuffering Variable
+          ifelse checkForDet self myself [
+            set shipSufferingDetonation self
+          ]
+          [ print word [name] of self " has narrowly evaded torpedoes"]
+        ]
+        if shipSufferingDetonation != nobody [
+          print word [name] of shipSufferingDetonation " has been hit by a torepedo!"
+          ask shipSufferingDetonation [set damageTakenThisTick damageTakenThisTick + TORPEDODAMAGE]
+          set detonated 1
+        ]
+      ]
+    ]
+    ; decrement lifetime
+    set lifetime lifetime - 1
+    ; kill expired torpedoes
+    if lifetime <= 0 [die]
+    if detonated = 1 [die]
+  ]
+end
+
+to-report checkForDet [shipAgent torpAgent]
+ ;Takes ship agent and torp agent. Calculates prob of collision based on their orientation,
+ ;determines if ship is hit. returns bool.
+  let theta subtract-headings [heading] of shipAgent [heading] of torpAgent
+  let lterm abs  sin theta * [shipLength] of shipAgent
+  let numerator max ( list lterm [shipBeam] of shipAgent )
+  let pVal numerator / 200
+  report random-float 1 <= pVal
+end
+
+
+
+to-report getDistance [agent1 agent2]
+  ;a helper function to report the distance between 2 agents
+  let returnval nobody
+  ask agent1[
+    set returnval distance agent2
+  ]
+  report returnVal
+end
+
 
 to move-turtleShips
   ;Move the turtleShips in 3 steps:
@@ -139,61 +209,85 @@ to move-turtleShips
   ;2-adopt desired heading subject to turn rate
   ;3-move ships forward
 
-
-  ;Step1 - Calculate desired destination for each ship
-
   ;German Battleships setting destination to southern edge at GermanTurnTime,
   if ticks = GermanDisengageSignalTick[ ; value set by slider, run once (destinations static)
     print word  ticks ":German Admiral Scheer Signals for withdrawal by individual movement"
-    ask turtleShips[
-      if (fleet = "German") and (shipClass = "Battleship")[
-        set destinationY min-pycor
-      ]
+
+    ask turtleShips with [fleet = "German" and shipClass = "Battleship"][
+      set destinationY min-pycor
     ]
   ]
   ;German destroyers either a)close with closest taget and fire torepedoes or b) withdraw if no torpedoes
   ;run every tick >= of german signal, destinations are dynamic
+
+  if ticks >= GermanDisengageSignalTick[
+    ask turtleShips with [fleet = "German" and shipClass = "Destroyer"][
+      if torpedoTubes > 0[
+        ;if Destroyers have torpedoes, close with nearest battleship
+
+        ; finds closest hostile
+        let possibleTargets turtleShips with [fleet = "British" and shipClass = "Battleship"]
+        let closestTarget min-one-of possibleTargets [distance myself]
+
+        ;set desired destination to target location
+        if closestTarget != nobody [
+          let targetPatch lead-Target closestTarget [speed] of self
+          set destinationX [pxcor] of targetPatch
+          set destinationY [pycor] of targetPatch
+        ]
+      ]
+     if torpedoTubes <= 0[
+       ;if destroyers have no torpedoes, withdraw
+       set destinationY min-pycor
+      ]
+    ]
+
+  ]
 
   ;After GermanTurnTime+Delay, British adjust course, either closing with closest german or turning away
   if ticks > GermanDisengageSignalTick + BritishDelay [ ;british delay set by slider
 
     if BritishSignal = "Engage"[;BritishSignal Set by User via chooser
 
-      let possibleTargets turtles with [fleet = "German"]
+      let possibleTargets turtleShips with [fleet = "German" and shipClass = "Battleship"]
       ask turtleShips with [fleet = "British"][
-        let closestTarget min-one-of possibleTargets [distance myself] ; finds closest hostile
+        ;let closestTarget min-one-of possibleTargets [distance myself] ; finds closest hostile
+        let closestTarget one-of possibleTargets
         ;set destination to postion of closest hostile
-        set destinationX [xcor] of closestTarget
-        set destinationY [ycor] of closestTarget
+        if closestTarget != nobody [
+         set destinationX [xcor] of closestTarget
+         set destinationY [ycor] of closestTarget
+        ]
       ]
     ]
 
-    if britishSignal = "Disengage"[;   BritishSignal Set by User via chooser
+    if britishSignal = "Disengage" [;   BritishSignal Set by User via chooser
       ;define behaviour of british ships if signal is "Disengage"
-      let hostiles turtles with [fleet != "British"] ;get the set of things to evade
-      ask turtleShips with [fleet = "British"] [
-        let closestHostile min-one-of hostiles [distance myself] ; finds closest hostile
-        let hostilesDestination patch [xcor] of closestHostile [ycor] of closestHostile
-        show hostilesDestination
-        let hostileDistToDest getdistance closestHostile hostilesDestination
-        show "hostileDistToDest"
-        show hostileDistToDest
-        show "AgentDist"
-        show distance hostilesDestination
-        if hostileDistToDest > distance hostilesDestination [ ;if ship is not between hositle and its detination
-          set destinationX [destinationX] of closestHostile ;placeholder, NEED TO FIGURE OUT EVASION SUBTRACT HEADING? IF torpedo match heading if ship head away
-          set destinationY [destinationY] of closestHostile
-        ]
-        if hostileDistToDest <= distance hostilesDestination [ ; if ship is between target and its destination
-          set destinationX [0 - destinationX] of closestHostile ;placeholder, NEED TO FIGURE OUT EVASION SUBRTACT HEADING?
-          set destinationY [0 - destinationY] of closestHostile
-        ]
-      ]
+      ;let hostiles turtleShips with [fleet != "British"] ;get the set of things to evade
 
+     ; if any? hostiles [
+        ask turtleShips with [fleet = "British"] [
+;          let closestHostile min-one-of hostiles [distance myself] ; finds closest hostile
+;          let hostilesDestination patch [xcor] of closestHostile [ycor] of closestHostile
+;          show hostilesDestination
+;          let hostileDistToDest getdistance closestHostile hostilesDestination
+;          if hostileDistToDest > distance hostilesDestination [ ;if ship is not between hositle and its detination
+;            set destinationX [destinationX] of closestHostile ;placeholder, NEED TO FIGURE OUT EVASION SUBTRACT HEADING? IF torpedo match heading if ship head away
+;            set destinationY [destinationY] of closestHostile
+;          ]
+;          if hostileDistToDest <= distance hostilesDestination [ ; if ship is between target and its destination
+;            set destinationX [0 - destinationX] of closestHostile ;placeholder, NEED TO FIGURE OUT EVASION SUBRTACT HEADING?
+;            set destinationY [0 - destinationY] of closestHostile
+;          ]
+          set destinationX random-float 10 + 90
+          set destinationY 125
+        ]
+;      ]
     ]
   ]
 
-    ;set  the desiredHeadingChange to be the difference between destination and current heading subject to max turn
+  ;set  the desiredHeadingChange to be the difference between destination
+  ;and current heading subject to max turn
   ask turtleShips [
     let desiredHeadingChange subtract-headings towardsxy destinationX destinationY heading
     if desiredHeadingChange > maxturn[
@@ -208,41 +302,104 @@ to move-turtleShips
   ]
 end
 
+to-report lead-Target [targetedAgent projectileSpeed]
+  ;takes agent and the speed of projectile in patches. returns the patch that results in intercept course.
+  ;assumes constant heading and speed
+  let targetPatch nobody
+  let timeToTarget distance targetedAgent / projectileSpeed
+  let offset timeToTarget * [speed] of targetedAgent
+  ask targetedAgent [set targetPatch patch-at-heading-and-distance [heading] of targetedAgent offset]
+  report targetPatch
+end
+
+to-report lead-TargetTorpedoes [targetedAgent projectileSpeed]
+  ;takes agent and the speed of projectile in patches. returns the patch that results in intercept course.
+  ;assumes constant heading and speed. Adjusted for torpedo movement occuring before ship movement
+  let targetPatch nobody
+  let timeToTarget (distance targetedAgent / projectileSpeed) - 1
+  let offset timeToTarget * [speed] of targetedAgent
+  ask targetedAgent [set targetPatch patch-at-heading-and-distance [heading] of targetedAgent offset]
+  report targetPatch
+end
+
+to launch-turtleTorpedoes
+  ask turtleShips[
+      if torpedoTubes > 0 [
+      let reps torpedoTubes
+      let enemyBattleShips turtleShips with [ fleet = [enemyFleet] of myself and shipClass = "Battleship" ] ;create agentset of all enemies
+      ;let targetShip min-one-of enemyBattleShips [distance myself]
+      let targetShip one-of enemyBattleShips
+      if distance targetShip <= TORPEDOATTACKRANGE[
+        let targetPatch lead-targetTorpedoes targetShip TORPEDOSPEED
+        ;PLACEHOLDER FOR OFFSET CALCULATION TO SIMULATE BEST EFFORTS OF CREW TO LEAD TARGET
+        let torpHeading towards targetPatch
+        repeat reps[
+          ask patch-here[
+          sprout-turtleTorpedoes 1 [
+            set heading torpHeading
+            set fleet "Torpedo"
+            set speed TORPEDOSPEED
+            set lifetime TORPEDOLIFETIME
+            set shape "line half"
+            set color white
+          ]
+        ]
+
+
+
+      set torpedoTubes -1
+      ]
+
+      ]
+    ]
+  ]
+end
 
 to shoot-turtleShips
+;procedure leverages built in cone function to target neares in arc enemy.
+;Abuses heading by spinning the turtle in place to fire each orientation of turrets.
+;rotates 360 within a tick to maintain 'real' heading.
 
   ask turtleShips[
-    let enemyShips turtles with [ fleet = [enemyFleet] of myself ] ;create agentset of all enemies
+    let enemyShips turtleShips with [ fleet = [enemyFleet] of myself ] ;create agentset of all enemies
 
     ;bow guns: find enemies and fire turrents
-    let enemyInArc enemyShips in-cone  90  ( [maxGunRange] of self ) ;agentset of enemy in arc
+    let enemyInArc enemyShips in-cone  180  ( [maxGunRange] of self ) ;agentset of enemy in arc
     let targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
-    if targetship != nobody[
-      ;shoot target with bowGuns
-      fireTurrets targetShip [bowGuns] of self
-      ask patch-here [set pcolor grey] ;placeholder for now, creates patch of grey. could generate smoke once implemented
-    ]
-
-
+    if targetShip != nobody [ fireTurrets targetShip [bowGuns] of self]
+    ;shoot starboard guns
+    right 90
+    set enemyInArc enemyShips in-cone  180  ( [maxGunRange] of self ) ;agentset of enemy in arc
+    set targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
+    if targetShip != nobody [ fireTurrets targetShip [starbGuns] of self]
+    ;shoot stern guns
+    right 90
+    set enemyInArc enemyShips in-cone  180  ( [maxGunRange] of self ) ;agentset of enemy in arc
+    set targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
+    if targetShip != nobody [ fireTurrets targetShip [sternGuns] of self]
+    ;shoot port guns
+    right 90
+    set enemyInArc enemyShips in-cone  180  ( [maxGunRange] of self ) ;agentset of enemy in arc
+    set targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
+    if targetShip != nobody [ fireTurrets targetShip [portGuns] of self]
+    ;turn back to original heading
+    right 90
   ]
-
-  ;shoot bow guns
-  ;shoot stern guns
-  ;shoot port guns
-  ;shoot starboard guns
 end
 
 to fireTurrets [targetShip gunsInArc]
-  show word "taking shot at " targetShip
-  ;determine expected number of hits. Fractional hits ok.
 
+  create-link-with targetShip
+  ;determine expected number of hits. Fractional hits ok.
   let hitsOnTarget ( [gunRateOfFire] of self * gunsInArc * 0.03 )  ;PLACEHOLDER FOR GUNNERY MODEL 3% of shots fired at jutland hit
   ;add more complicated fromula based on hit distribution per "An analysis of the fighting". Some relevant variables are likely range and illumination/smoke
+
+  ask patch-here [set pcolor grey] ;placeholder for now, creates patch of grey. could generate smoke once implemented
 
   ;accumulate expected hits to "damageTakenThisTick" field for resolution at end of tick
   ask targetShip [
     set damageTakenThisTick ( [damageTakenThisTick] of self + hitsOnTarget )
-    set pcolor pink ;placeholder for smoke generation on hit.
+    set pcolor pink ;placeholder for smoke generation on being hit.
   ]
 
 
@@ -251,34 +408,75 @@ end
 to damage-turtleShips
   ;resolve expected hits on TurtleShips
   ask turtleships [
-    ;calculate discrete hits for purposes of assining critical damage
+    ;calculate discrete hits for purposes of assigning critical damage
     let partialHits [damageTakenThisTick] of self mod 1
     let discreteHits floor [damageTakenThisTick] of self
     ;account for partial hits by giving them a prorated chance of inclusion
     if partialHits >= random-float 1 [set discreteHits discreteHits + 1]
-    repeat discreteHits [checkForCriticalDamage]
-
-
-    show word "damageTakenThisTick:" [damageTakenThisTick] of self
     ;for each hit, check for critical damage
-    show word "partial hits " partialHits
-    show word "effective hits " discreteHits
-
+    repeat discreteHits [checkForCriticalDamage]
 
     ;reduce hullpoints and reset DamageTakenThisTick
     set hullPoints ( [hullPoints] of self - [damageTakenThisTick] of self  )
     set damageTakenThisTick 0
-
+    if hullPoints <= 0 [
+      show word [name] of self " has been taken out of action by cumulative damage"
+      set sunk 1
+    ]
+    if sunk = 1 [ die ]
   ]
 end
 
 to checkForCriticalDamage
-  print "check for critical"
+  ;check for crit by comparing a random float and comparing it against Global dmg breakpoints
+  let randNum random-float 1
+  if [shipClass] of self = "Battleship" [
+    ;compare random float to Battleship dmg breakpoints
+    (ifelse        ;hideous syntax of if..elif block
+      randNum <= BattleShipMagazineDmgBreakPoint [sufferExplosion]
+      randNum <= BattleShipEngineDmgBreakPoint [sufferEngineRoomHit]
+      randNum <= BattleShipRudderDmgBreakPoint [sufferRudderHit]
+      randNum <= BattleShipTurretDmgBreakPoint [sufferTurretHit]
+      [ ;show word [name] of self " has suffered a non-disabling hit"
+      ] ;last block is executed if all boolean statements are true. Hideous.
+    )
+   ]
+
+  ;currently destroyers dont take critical hits. If research reveals that partially disabled destroyers were a factor we can add
 end
 
-;### The two main procedures ###
+to sufferExplosion
+  set sunk 1
+  show word [name] of self " has suffered a catastophic explosion!"
+end
+
+to sufferEngineRoomHit
+  let reducedSpeed max (list 0 ([speed] of self / 2))
+  set speed reducedSpeed
+  show word [name] of self " has suffered a disabling hit to an engine room"
+end
+
+to sufferRudderHit
+  let reducedMaxTurn max (list 0 ([maxTurn] of self / 2 ))
+  set maxturn reducedMaxTurn
+  show word [name] of self " has suffered a disabling hit to her rudder"
+end
+
+to sufferTurretHit
+  show word [name] of self " has suffered a disabling hit to one of her turrets"
+  let randNum random 4
+  (ifelse
+    randNum = 0 [ set bowGuns max (list 0 ([bowGuns] of self - 2 ))]
+    randNum = 1 [ set sternGuns max (list 0 ([bowGuns] of self - 2 ))]
+    randNum = 2 [ set portGuns max (list 0 ([bowGuns] of self - 2 ))]
+               [ set starbGuns max (list 0 ([bowGuns] of self - 2 ))]
+  )
+end
+
+;### The orchestrating Main procedures ###
 to setup
   clear-all
+  setup-constants
   setup-patches
   setup-turtleShips
   load-DamageGlobals
@@ -286,7 +484,10 @@ to setup
 end
 
 to go
+  clear-links
+  move-turtleTorpedoes
   move-turtleShips
+  launch-turtleTorpedoes
   shoot-turtleShips
   damage-turtleShips
   tick
@@ -377,7 +578,7 @@ BritishDelay
 BritishDelay
 0
 10
-0.0
+6.0
 1
 1
 Tick
@@ -537,6 +738,13 @@ Circle -7500403 true true 8 8 285
 Circle -16777216 true false 60 75 60
 Circle -16777216 true false 180 75 60
 Polygon -16777216 true false 150 168 90 184 62 210 47 232 67 244 90 220 109 205 150 198 192 205 210 220 227 242 251 229 236 206 212 183
+
+fire
+false
+0
+Polygon -7500403 true true 151 286 134 282 103 282 59 248 40 210 32 157 37 108 68 146 71 109 83 72 111 27 127 55 148 11 167 41 180 112 195 57 217 91 226 126 227 203 256 156 256 201 238 263 213 278 183 281
+Polygon -955883 true false 126 284 91 251 85 212 91 168 103 132 118 153 125 181 135 141 151 96 185 161 195 203 193 253 164 286
+Polygon -2674135 true false 155 284 172 268 172 243 162 224 148 201 130 233 131 260 135 282
 
 fish
 false
