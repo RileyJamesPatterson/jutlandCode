@@ -176,8 +176,8 @@ to move-turtleTorpedoes
     ; decrement lifetime
     set lifetime lifetime - 1
     ; kill expired torpedoes
-    if lifetime <= 0 [die]
-    if detonated = 1 [die]
+    if (lifetime <= 0) or (detonated = 1) [die ]
+
   ]
 end
 
@@ -342,14 +342,12 @@ to launch-turtleTorpedoes
             set lifetime TORPEDOLIFETIME
             set shape "line half"
             set color white
+            set pen-size .5
+            pen-down
+            ]
           ]
+          set torpedoTubes -1
         ]
-
-
-
-      set torpedoTubes -1
-      ]
-
       ]
     ]
   ]
@@ -423,7 +421,10 @@ to damage-turtleShips
       show word [name] of self " has been taken out of action by cumulative damage"
       set sunk 1
     ]
-    if sunk = 1 [ die ]
+    if sunk = 1 [
+      set shape "fire"
+      stamp
+      die ]
   ]
 end
 
@@ -496,11 +497,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-1026
-1627
+1127
+1828
 -1
 -1
-8.0
+9.0
 1
 10
 1
@@ -577,8 +578,8 @@ SLIDER
 BritishDelay
 BritishDelay
 0
-10
-6.0
+15
+9.0
 1
 1
 Tick
@@ -593,6 +594,25 @@ BritishSignal
 BritishSignal
 "Disengage" "Engage"
 1
+
+PLOT
+3
+221
+203
+371
+Count of Fleet Hull Points 
+time
+totals
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"British" 1.0 0 -5298144 true "" "plot sum [hullPoints] of turtleShips with [fleet = \"British\"]"
+"German" 1.0 0 -16777216 true "" "plot sum [hullPoints] of turtleShips with [fleet = \"German\"]"
 
 @#$#@#$#@
 ## WHAT IS IT?
