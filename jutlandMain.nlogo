@@ -1,5 +1,6 @@
 extensions [
   csv
+  time
 ]
 ;### Declare Globals###
 globals [
@@ -11,6 +12,13 @@ globals [
   TORPEDOLIFETIME
   TORPEDODAMAGE
   TORPEDOATTACKRANGE
+  FleetInContact ;FALSE - out of contact or TRUE in contact
+  SimTime ;Current date time within simulation
+  SunSet ;Date time of SunSet
+  NavalTwilight; Date time of end of aprox naval twilight (ie when Visibility from natural light is = 0)
+  MaxVisibility; Current Maximum visual distance given lighting conditions, in patches
+  VisibilityReductionStep; calculated amount per tick that visbility descreases between sunset and naval twilight
+  ColorReductionStep; calculated amount per tick that shade of patches descreases between sunset and naval twilight
 ]
 
 ; ### Declare Agent Breeds ###
@@ -41,8 +49,9 @@ turtleShips-own [
   shipBeam     ;Imported from orderOfBattle.csv
   hullPoints   ;Imported from orderOfBattle.csv
   damageTakenThisTick  ;calculated.
+  lostHp       ;amount of HP ship has lost from max hp
+  inContactWithEnemy ;True if enemy is within visual range
   sunk         ;calculated, 0=unsunk 1=sunk
-
 ]
 
 turtleTorpedoes-own [
@@ -60,7 +69,14 @@ to setup-constants
   set TORPEDOLIFETIME 19
   set TORPEDODAMAGE 10
   Set TORPEDOATTACKRANGE 40
-
+  Set FleetInContact TRUE
+  set SimTime time:anchor-to-ticks (time:create "1916/05/31 20:15") 40 "second"
+  set SunSet time:create "1916/05/31 21:13"
+  set NavalTwilight time:create "1916/05/31 23:00"
+  set MaxVisibility 90 ;Best guess
+  let ticksUntilDarkness ( time:difference-between (Sunset) (NavalTwilight) "seconds" / 40 ) ;number of seconds between sunset and darkness / sec per tick
+  set VisibilityReductionStep (MaxVisibility / ticksUntilDarkness)
+  set ColorReductionStep ( 3.99 / ticksUntilDarkness)
 
 end
 
@@ -107,6 +123,7 @@ to setup-turtleShips
       set hullPoints item 22 rowdata
       set sunk 0
       set damageTakenThisTick 0
+      set lostHp 0
     ]
   ]
   file-close-all
@@ -227,6 +244,8 @@ to move-turtleShips
 
         ; finds closest hostile
         let possibleTargets turtleShips with [fleet = "British" and shipClass = "Battleship"]
+
+
         let closestTarget min-one-of possibleTargets [distance myself]
 
         ;set desired destination to target location
@@ -360,24 +379,24 @@ to shoot-turtleShips
 
   ask turtleShips[
     let enemyShips turtleShips with [ fleet = [enemyFleet] of myself ] ;create agentset of all enemies
-
+    let effectiveRange min list MaxVisibility maxGunRange
     ;bow guns: find enemies and fire turrents
-    let enemyInArc enemyShips in-cone  180  ( [maxGunRange] of self ) ;agentset of enemy in arc
+    let enemyInArc enemyShips in-cone  effectiveRange 180   ;agentset of enemy in arc
     let targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
     if targetShip != nobody [ fireTurrets targetShip [bowGuns] of self]
     ;shoot starboard guns
     right 90
-    set enemyInArc enemyShips in-cone  180  ( [maxGunRange] of self ) ;agentset of enemy in arc
+    set enemyInArc enemyShips in-cone  effectiveRange 180   ;agentset of enemy in arc
     set targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
     if targetShip != nobody [ fireTurrets targetShip [starbGuns] of self]
     ;shoot stern guns
     right 90
-    set enemyInArc enemyShips in-cone  180  ( [maxGunRange] of self ) ;agentset of enemy in arc
+    set enemyInArc enemyShips in-cone  effectiveRange 180   ;agentset of enemy in arc
     set targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
     if targetShip != nobody [ fireTurrets targetShip [sternGuns] of self]
     ;shoot port guns
     right 90
-    set enemyInArc enemyShips in-cone  180  ( [maxGunRange] of self ) ;agentset of enemy in arc
+    set enemyInArc enemyShips in-cone  effectiveRange 180   ;agentset of enemy in arc
     set targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
     if targetShip != nobody [ fireTurrets targetShip [portGuns] of self]
     ;turn back to original heading
@@ -416,16 +435,20 @@ to damage-turtleShips
 
     ;reduce hullpoints and reset DamageTakenThisTick
     set hullPoints ( [hullPoints] of self - [damageTakenThisTick] of self  )
+    set lostHp ([lostHp] of self + [damageTakenThisTick] of self )
     set damageTakenThisTick 0
     if hullPoints <= 0 [
       show word [name] of self " has been taken out of action by cumulative damage"
       set sunk 1
     ]
-    if sunk = 1 [
-      set shape "fire"
-      stamp
-      die ]
+    if sunk = 1 [ sink-TurtleShip]
   ]
+end
+
+to sink-TurtleShip
+  set shape "fire"
+  stamp
+  die
 end
 
 to checkForCriticalDamage
@@ -447,7 +470,7 @@ to checkForCriticalDamage
 end
 
 to sufferExplosion
-  set sunk 1
+  set damageTakenThisTick hullPoints
   show word [name] of self " has suffered a catastophic explosion!"
 end
 
@@ -474,6 +497,33 @@ to sufferTurretHit
   )
 end
 
+to reduce-visibility
+  ;if simtime is after sunset, reduce max visibility by calculated amount
+  if time:is-between? Simtime Sunset NavalTwilight [
+    set MaxVisibility max (list 0 (MaxVisibility - VisibilityReductionStep))
+    ;darken colors of patches by precalculated increment.
+    ask patches[
+      set pcolor pcolor - ColorReductionStep
+    ]
+  ]
+end
+
+to set-FleetInContact
+  ;if no ship is within MAXVISIBILITY of enemy ship, FleetInContact is set to False. This triggers end of simulation in Behaviour Space tool
+  ask turtleships [
+    let enemyShips turtleShips with [ fleet = [enemyFleet] of myself ]
+    let closestEnemy min-one-of enemyShips [distance myself]
+    (ifelse
+      closestEnemy = nobody [ set inContactWithEnemy FALSE ] ;if no enemies remaining, ship has broken contact
+      distance closestEnemy > MaxVisibility [ set inContactWithEnemy FALSE ]  ;if closes enemy is beyond visual range, ship has broken contact
+      [set inContactWithEnemy TRUE ] ;else ship remains in contact
+    )
+  ]
+  if all? turtleships [inContactWithEnemy = FALSE] [set FleetInContact FALSE] ;if no ships are in contact with enemy fleet is out of contact
+
+
+
+end
 ;### The orchestrating Main procedures ###
 to setup
   clear-all
@@ -491,6 +541,8 @@ to go
   launch-turtleTorpedoes
   shoot-turtleShips
   damage-turtleShips
+  reduce-visibility
+  set-FleetInContact
   tick
 end
 @#$#@#$#@
@@ -579,7 +631,7 @@ BritishDelay
 BritishDelay
 0
 15
-9.0
+6.0
 1
 1
 Tick
@@ -596,10 +648,10 @@ BritishSignal
 1
 
 PLOT
-3
-221
-203
-371
+7
+342
+207
+492
 Count of Fleet Hull Points 
 time
 totals
@@ -613,6 +665,28 @@ true
 PENS
 "British" 1.0 0 -5298144 true "" "plot sum [hullPoints] of turtleShips with [fleet = \"British\"]"
 "German" 1.0 0 -16777216 true "" "plot sum [hullPoints] of turtleShips with [fleet = \"German\"]"
+
+MONITOR
+30
+215
+162
+260
+SimTime
+time:show SimTime \"yyyy-MM-dd HH:mm:ss\"
+2
+1
+11
+
+MONITOR
+31
+272
+144
+317
+Fleets In Contact
+FleetInContact
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -967,6 +1041,23 @@ NetLogo 6.4.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="Demo" repetitions="5" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>count turtles</metric>
+    <enumeratedValueSet variable="BritishDelay">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="GermanDisengageSignalTick">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="BritishSignal">
+      <value value="&quot;Engage&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
