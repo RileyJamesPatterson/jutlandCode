@@ -1,16 +1,129 @@
 shipId,xCorStart,yCorStart,headingStart,name,fleet,shipClass,vanOrder,destinationX,destinationY,maxTurn,speed,gunCaliber,maxGunRange,gunRateOfFire,bowGuns,sternGuns,portGuns,starbGuns,torpedoTubes ,length,beam,hullPoints,sunk
-1,-40,70,50,Iron Duke,British,Battleship,1,0,92,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
-2,-50,71,50,Dreadnought,British,Battleship,2,0,91,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
-3,-45,70,50,Collosus,British,Battleship,3,0,90,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
-4,-44,71,50,Markborough,British,Battleship,3,0,90,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
-5,-42,70,50,King George V,British,Battleship,3,0,90,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
-6,-40,71,50,Shark,British,Destroyer,4,0,90,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,8,4,0
-7,-41,72,50,Kestrel,British,Destroyer,5,0,89,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,8,4,0
-8,-45,25,90,Lutzow,German,Battleship,1,0,45,20,2,13,90,1.33,2,4,2,2,0,161,25,20,0
-9,-46,24,90,Ostfriesland,German,Battleship,2,0,44,20,2,13,90,1.33,2,4,2,2,0,161,25,20,0
-10,-43,25,90,V4,German,Destroyer,3,0,45,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,8,4,0
-11,-40,23,90,V5,German,Destroyer,4,0,43,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
-12,-30,26,90,V6,German,Destroyer,3,0,46,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,8,4,0
-13,-35,24,90,V7,German,Destroyer,4,0,44,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
-14,-36,24,90,V8,German,Destroyer,4,0,44,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
-15,-49,25,90,V9,German,Destroyer,4,0,44,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+H1,-64,-17,40,Hannover,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+H2,-62,-18,40,Schlesien,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+H3,-59,-19,40,Schleswig-Holstein,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+D1,-58,-14,40,Deutschland,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+D2,-55,-14,40,Hessen,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+D3,-54,-15,40,Pommern,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+W1,-50,-10,40,WestFalen,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+W2,-46,-9,40,Nassau,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+W3,-42,-7,40,Rheinland,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+P1,-38,-5,40,Posen,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+P2,-35,-4,40,Oldenburg,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+P3,-33,-2,40,Helgoland,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+P4,-29,-2,40,Thuringen,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+P5,-26,-1,40,Ostfreisland,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+F1,-24,0,40,Friedrich Der Grosse,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+P6,-22,0,40,Kaiserin,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+P7,-20,0,40,Prinzregent Luitpold,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+P8,-18,0,40,Kaiser,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+P9,-16,0,40,Markgraf,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+P10,-14,0,40,Kronprinz,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+P11,-12,0,40,Grosser Kurfurst,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+K1,-10,0,40,Konig,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Bc1,5,-2,40,Von der Tann,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Bc2,5,0,40,Moltke,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Bc3,5,2,40,Seydlitz,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Bc4,5,4,40,Derfflinger,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Bc4,-14,-34,40,Lutzow,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+R,5,-17,40,Regensburg BC,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+W,-6,29,40,Wiesbaden,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+F1,-8,-39,40,Frankfurt,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+F2,-9,-40,40,Elbing,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+F3,-10,-41,40,Pillau,German,Battleship,1,80,10,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+2ndFloat1,5,-15,40,SMS B98,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+2ndFloat2,3,-15,40,SMS G101,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+2ndFloat3,1,-15,40,SMS G102,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+2ndFloat4,0,-15,40,SMS B112,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+2ndFloat5,5,-16,40,SMS B97,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+2ndFloat6,3,-16,40,SMS B109,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+2ndFloat7,1,-16,40,SMS B110,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+2ndFloat8,0,-16,40,SMS B111,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+2ndFloat9,5,-16,40,SMS G103,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+2ndFloat10,3,-17,40,SMS G104,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+7thFloat1,5,-19,40,SMS S24,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+7thFloat2,3,-19,40,SMS S15,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+7thFloat3,1,-19,40,SMS S17,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+7thFloat4,0,-20,40,SMS S20,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+7thFloat5,5,-20,40,SMS S16,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+7thFloat6,3,-20,40,SMS S18,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+7thFloat7,1,-21,40,SMS S19,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+7thFloat8,0,-21,40,SMS S23,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+7thFloat9,5,-21,40,SMSV189,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+9thFloat1,3,-12,40,SMS S24,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+9thFloat2,1,-12,40,SMS S15,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+9thFloat3,-1,-12,40,SMS S17,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+9thFloat4,3,-13,40,SMS S20,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+9thFloat5,1,-13,40,SMS S16,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+9thFloat6,-1,-13,40,SMS S18,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+9thFloat7,3,-15,40,SMS S19,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+9thFloat8,1,-15,40,SMS S23,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+9thFloat9,-1,-10,40,SMSV189,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+9thFloat10,3,-10,40,SMSV189,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+9thFloat11,-1,-9,40,SMSV189,German,Destroyer,4,40,30,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+M1,26,29,180,Marlborough,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+M2,26,30,180,Revenge,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+M3,26,32,180,Hercules,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+M4,26,34,180,Agincourt,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+C1,34,19,180,Colossus,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+C2,34,21,180,Collingwood,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+C3,33,22,180,St.Vincent,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+C4,33,23,180,Neptune,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Bar1,29,37,180,Barham,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Bar2,28,39,180,Valiant,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Bar3,28,41,180,Malaya,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Ben1,39,20,180,Benbow,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Ben2,38,22,180,Bellerophon,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Ben3,41,23,180,Temeraire,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Ben4,40,25,180,Vanguard,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Iron1,47,13,180,Iron Duke,British,Battleship,1,53,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Iron2,47,14,180,Royal Oak,British,Battleship,1,53,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Iron3,47,15,180,Superb,British,Battleship,1,53,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Iron4,47,17,180,Canada,British,Battleship,1,53,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Or1,56,10,180,Orion,British,Battleship,1,60,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Or2,56,12,180,Monarch,British,Battleship,1,60,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Or3,55,13,180,Conqueror,British,Battleship,1,60,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Or4,55,14,180,Thunderer,British,Battleship,1,60,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Kg1,63,6,180,King George V,British,Battleship,1,68,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+kg2,63,8,180,Ajax,British,Battleship,1,68,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+kg3,62,10,180,Centurion,British,Battleship,1,68,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+kg4,62,12,180,Erin,British,Battleship,1,68,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+lion1,76,-12,180,Lion,British,Battleship,1,70,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+lion2,76,-10,180,Princess Royal,British,Battleship,1,70,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+lion3,77,-8,180,Tiger,British,Battleship,1,70,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+lion4,77,-6,180,New Zealand ,British,Battleship,1,70,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+lion5,78,-4,180,inflexible,British,Battleship,1,70,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+lion6,79,-2,180,indomitable,British,Battleship,1,70,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Cali1,60,-5,180,Calliope,British,Battleship,1,70,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Cali2,60,-3,180,Constance,British,Battleship,1,70,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Cali3,60,-2,180,Comus,British,Battleship,1,70,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Cali4,60,0,180,Caroline,British,Battleship,1,70,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Cali5,60,2,180,Royalist,British,Battleship,1,70,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Mino1,80,3,180,Minotaur,British,Battleship,1,75,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Mino2,80,5,180,Hampshire,British,Battleship,1,75,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Mino3,80,8,180,Shannon,British,Battleship,1,75,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Mino4,80,11,180,Cochrane,British,Battleship,1,75,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Mino5,80,14,180,Duke Of Edinburgh,British,Battleship,1,75,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Fall1,68,-18,225,Falmouth,British,Battleship,1,50,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Fall2,69,-17,225,Yarmouth,British,Battleship,1,50,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Fall3,70,-16,225,Birkenhead,British,Battleship,1,50,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Fall4,71,-15,225,Gloucester ,British,Battleship,1,50,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Fall5,72,-14,225,Engadine,British,Battleship,1,50,-30,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Inc1,66,10,175,Inconstant,British,Battleship,1,80,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Inc2,66,12,175,Phaeton,British,Battleship,1,80,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+Inc3,65,15,175,Galatea,British,Battleship,1,80,-40,20,2,12,90,1.33,2,4,2,2,0,161,25,20,0
+B11float1,65,-8,270,Castor,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float2,65,-7,270,Ossory,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float3,65,-6,270,Martial,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float4,65,-5,270,Magic,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float5,66,-8,270,Minion,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float6,66,-8,270,Mystic,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float7,66,-7,270,Mons,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float8,66,-6,270,Mandate,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float9,66,-5,270,Michael,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float10,67,-8,270,Marne,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float11,67,-8,270,Millbrook,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float12,68,-7,270,Manners,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float13,68,-6,270,Moon,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float14,68,-5,270,Mounsey,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
+B11float15,68,-8,270,Morning star,British,Destroyer,4,-60,-10,35,3,3.5,50,15.6,0.01,0.01,0,0,2,70,25,4,0
