@@ -73,10 +73,11 @@ to setup-constants
   set SimTime time:anchor-to-ticks (time:create "1916/05/31 20:15") 40 "second"
   set SunSet time:create "1916/05/31 21:13"
   set NavalTwilight time:create "1916/05/31 23:00"
-  set MaxVisibility 90 ;Best guess
+  set MaxVisibility 80 ;Best guess based off 20:05 max range of german battlecruiser salve Tarrant p153
   let ticksUntilDarkness ( time:difference-between (Sunset) (NavalTwilight) "seconds" / 40 ) ;number of seconds between sunset and darkness / sec per tick
   set VisibilityReductionStep (MaxVisibility / ticksUntilDarkness)
   set ColorReductionStep ( 3.99 / ticksUntilDarkness)
+  resize-world -150 150 -100 100 ;sets patch size of the world.
 
 end
 
@@ -142,8 +143,13 @@ to setup-turtleShips
     ]
     if shipClass = "Destroyer" [
       set shape "arrow"
-      set size 0.7
+      set size 1.7
     ]
+
+    if shipClass = "Battleship" [
+      set size 2
+    ]
+
   ]
 end
 
@@ -231,7 +237,9 @@ to move-turtleShips
     print word  ticks ":German Admiral Scheer Signals for withdrawal by individual movement"
 
     ask turtleShips with [fleet = "German" and shipClass = "Battleship"][
+      set destinationX min-pxcor
       set destinationY min-pycor
+
     ]
   ]
   ;German destroyers either a)close with closest taget and fire torepedoes or b) withdraw if no torpedoes
@@ -257,6 +265,7 @@ to move-turtleShips
       ]
      if torpedoTubes <= 0[
        ;if destroyers have no torpedoes, withdraw
+       set destinationX min-pxcor
        set destinationY min-pycor
       ]
     ]
@@ -270,8 +279,8 @@ to move-turtleShips
 
       let possibleTargets turtleShips with [fleet = "German" and shipClass = "Battleship"]
       ask turtleShips with [fleet = "British"][
-        ;let closestTarget min-one-of possibleTargets [distance myself] ; finds closest hostile
-        let closestTarget one-of possibleTargets
+        ;let closestTarget min-one-of possibleTargets [distance myself]
+        let closestTarget min-one-of possibleTargets [distance myself] ; finds closest hostile
         ;set destination to postion of closest hostile
         if closestTarget != nobody [
          set destinationX [xcor] of closestTarget
@@ -298,8 +307,8 @@ to move-turtleShips
 ;            set destinationX [0 - destinationX] of closestHostile ;placeholder, NEED TO FIGURE OUT EVASION SUBRTACT HEADING?
 ;            set destinationY [0 - destinationY] of closestHostile
 ;          ]
-          set destinationX random-float 10 + 90
-          set destinationY 125
+          set destinationX max-pxcor
+          set destinationY ycor
         ]
 ;      ]
     ]
@@ -348,24 +357,26 @@ to launch-turtleTorpedoes
       let enemyBattleShips turtleShips with [ fleet = [enemyFleet] of myself and shipClass = "Battleship" ] ;create agentset of all enemies
       ;let targetShip min-one-of enemyBattleShips [distance myself]
       let targetShip one-of enemyBattleShips
-      if distance targetShip <= TORPEDOATTACKRANGE[
-        let targetPatch lead-targetTorpedoes targetShip TORPEDOSPEED
-        ;PLACEHOLDER FOR OFFSET CALCULATION TO SIMULATE BEST EFFORTS OF CREW TO LEAD TARGET
-        let torpHeading towards targetPatch
-        repeat reps[
-          ask patch-here[
-          sprout-turtleTorpedoes 1 [
-            set heading torpHeading
-            set fleet "Torpedo"
-            set speed TORPEDOSPEED
-            set lifetime TORPEDOLIFETIME
-            set shape "line half"
-            set color white
-            set pen-size .5
-            pen-down
+      if targetShip != nobody [
+        if distance targetShip <= TORPEDOATTACKRANGE[
+          let targetPatch lead-targetTorpedoes targetShip TORPEDOSPEED
+          ;PLACEHOLDER FOR OFFSET CALCULATION TO SIMULATE BEST EFFORTS OF CREW TO LEAD TARGET
+          let torpHeading towards targetPatch
+          repeat reps[
+            ask patch-here[
+            sprout-turtleTorpedoes 1 [
+              set heading torpHeading
+              set fleet "Torpedo"
+              set speed TORPEDOSPEED
+              set lifetime TORPEDOLIFETIME
+              set shape "line half"
+              set color white
+              set pen-size .5
+              pen-down
+              ]
             ]
+            set torpedoTubes -1
           ]
-          set torpedoTubes -1
         ]
       ]
     ]
@@ -382,22 +393,27 @@ to shoot-turtleShips
     let effectiveRange min list MaxVisibility maxGunRange
     ;bow guns: find enemies and fire turrents
     let enemyInArc enemyShips in-cone  effectiveRange 180   ;agentset of enemy in arc
-    let targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
+
+    ;Orignally selected closest enemy in arc per below, but results were overly coordinated shooting that sniped ships too effectively
+    ;let targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
+
+    ;shoot bow guns
+    let targetShip one-of enemyInArc  ;Selects a random enemy in arc and in effective range
     if targetShip != nobody [ fireTurrets targetShip [bowGuns] of self]
     ;shoot starboard guns
     right 90
     set enemyInArc enemyShips in-cone  effectiveRange 180   ;agentset of enemy in arc
-    set targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
+    set targetShip one-of enemyInArc
     if targetShip != nobody [ fireTurrets targetShip [starbGuns] of self]
     ;shoot stern guns
     right 90
     set enemyInArc enemyShips in-cone  effectiveRange 180   ;agentset of enemy in arc
-    set targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
+    set targetShip one-of enemyInArc  ; finds closest enemy in arc
     if targetShip != nobody [ fireTurrets targetShip [sternGuns] of self]
     ;shoot port guns
     right 90
     set enemyInArc enemyShips in-cone  effectiveRange 180   ;agentset of enemy in arc
-    set targetShip min-one-of enemyInArc [distance myself] ; finds closest enemy in arc
+    set targetShip one-of enemyInArc
     if targetShip != nobody [ fireTurrets targetShip [portGuns] of self]
     ;turn back to original heading
     right 90
@@ -549,11 +565,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-1127
-1828
+1723
+1024
 -1
 -1
-9.0
+5.0
 1
 10
 1
@@ -563,8 +579,8 @@ GRAPHICS-WINDOW
 0
 0
 1
--50
-50
+-150
+150
 -100
 100
 1
@@ -616,7 +632,7 @@ GermanDisengageSignalTick
 GermanDisengageSignalTick
 0
 10
-5.0
+0.0
 1
 1
 Tick
@@ -631,7 +647,7 @@ BritishDelay
 BritishDelay
 0
 15
-6.0
+5.0
 1
 1
 Tick
@@ -645,7 +661,7 @@ CHOOSER
 BritishSignal
 BritishSignal
 "Disengage" "Engage"
-1
+0
 
 PLOT
 7
