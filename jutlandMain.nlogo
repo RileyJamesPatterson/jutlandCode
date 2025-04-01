@@ -34,7 +34,7 @@ turtleShips-own [
   name         ;Imported from orderOfBattle.csv
   fleet        ;Imported from orderOfBattle.csv
   enemyfleet   ;calculated
-  shipClass    ;Imported from orderOfBattle.csv
+  shipBehaviour   ;Imported from orderOfBattle.csv
   twelveInchEquiv     ;Imported from orderOfBattle.csv
   destinationX ;Imported from orderOfBattle.csv
   destinationY ;Imported from orderOfBattle.csv
@@ -55,6 +55,8 @@ turtleShips-own [
   lostHp       ;amount of HP ship has lost from max hp
   inContactWithEnemy ;True if enemy is within visual range
   sunk         ;calculated, 0=unsunk 1=sunk
+  shipType
+  shipClass
 ]
 
 turtleTorpedoes-own [
@@ -81,7 +83,7 @@ to setup-constants
   set VisibilityReductionStep (MaxVisibility / ticksUntilDarkness)
 
 
-  resize-world -160 160 -150 50 ;sets patch size of the world.
+  resize-world -160 160 -150 45 ;sets patch size of the world.
 
 end
 
@@ -112,7 +114,7 @@ to setup-turtleShips
       set heading item 3 rowdata ; Azimuth 0-360
       set name item 4 rowdata ; name of ship as string
       set fleet item 5 rowdata ; str: "British" or "German"
-      set shipClass item 6 rowdata; str: "Battleship" or "Destroyer" determines behaviour in sim
+      set shipBehaviour item 6 rowdata; str: "Battleship" or "Destroyer" determines behaviour in sim
       set twelveInchEquiv item 7 rowdata ; Primary armament equivalent in 12 inch rounds (850lbs), based on projectile weight
       set destinationX item 8 rowdata ; xcor of destination patch
       set destinationY item 9 rowdata ; ycor of destination patch
@@ -129,6 +131,8 @@ to setup-turtleShips
       set shipLength item 20 rowdata ;length in meters. Used for torpedo detonation chance.
       set shipBeam item 21 rowdata ; beam (width) in meters. Used for torpedo detonation chance.
       set hullPoints item 22 rowdata
+      set shipType item 23 rowdata
+      set shipClass item 24 rowdata
       set sunk 0
       set damageTakenThisTick 0
       set lostHp 0
@@ -148,13 +152,24 @@ to setup-turtleShips
       set color black ;placeholder
       set enemyFleet "British"
     ]
-    if shipClass = "Destroyer" [
+    if shipType = "destroyer" [
       set shape "arrow"
-      set size 1.7
+      set size 1
     ]
 
-    if shipClass = "Battleship" [
-      set size 2
+     if shipType = "battlecruiser" [
+      set size 2.5
+      set shape "battlecruiser"
+    ]
+
+    if shipType = "cruiser" [
+      set size 1.7
+      set shape "cruiser"
+    ]
+
+    if shipType = "battleship" [
+      set size 2.5
+
     ]
 
   ]
@@ -248,7 +263,7 @@ to move-turtleShips
   if ticks = GermanDisengageSignalTick[ ; value set by slider, run once (destinations static)
     print word  ticks ":German Admiral Scheer Signals for withdrawal by individual movement"
 
-    ask turtleShips with [fleet = "German" and shipClass = "Battleship"][
+    ask turtleShips with [fleet = "German" and shipBehaviour = "Battleship"][
       set destinationX min-pxcor + 45
       set destinationY min-pycor
 
@@ -258,12 +273,12 @@ to move-turtleShips
   ;run every tick >= of german signal, destinations are dynamic
 
   if ticks >= GermanDisengageSignalTick[
-    ask turtleShips with [fleet = "German" and shipClass = "Destroyer"][
+    ask turtleShips with [fleet = "German" and shipBehaviour = "Destroyer"][
       if torpedoTubes > 0[
         ;if Destroyers have torpedoes, close with nearest battleship
 
         ; finds closest hostile
-        let possibleTargets turtleShips with [fleet = "British" and shipClass = "Battleship"]
+        let possibleTargets turtleShips with [fleet = "British" and shipBehaviour = "Battleship"]
 
 
         let closestTarget min-one-of possibleTargets [distance myself]
@@ -289,7 +304,7 @@ to move-turtleShips
 
     if BritishSignal = "Engage"[;BritishSignal Set by User via chooser
 
-      let possibleTargets turtleShips with [fleet = "German" and shipClass = "Battleship"]
+      let possibleTargets turtleShips with [fleet = "German" and shipBehaviour = "Battleship"]
       ask turtleShips with [fleet = "British"][
         ;let closestTarget min-one-of possibleTargets [distance myself]
         let closestTarget min-one-of possibleTargets [distance myself] ; finds closest hostile
@@ -366,7 +381,7 @@ to launch-turtleTorpedoes
   ask turtleShips[
       if torpedoTubes > 0 [
       let reps torpedoTubes
-      let enemyBattleShips turtleShips with [ fleet = [enemyFleet] of myself and shipClass = "Battleship" ] ;create agentset of all enemies
+      let enemyBattleShips turtleShips with [ fleet = [enemyFleet] of myself and shipBehaviour = "Battleship" ] ;create agentset of all enemies
       ;let targetShip min-one-of enemyBattleShips [distance myself]
       let targetShip one-of enemyBattleShips
       if targetShip != nobody [
@@ -484,7 +499,7 @@ end
 to checkForCriticalDamage
   ;check for crit by comparing a random float and comparing it against Global dmg breakpoints
   let randNum random-float 1
-  if [shipClass] of self = "Battleship" [
+  if [shipBehaviour] of self = "Battleship" [
     ;compare random float to Battleship dmg breakpoints
     (ifelse        ;hideous syntax of if..elif block
       randNum <= BattleShipMagazineDmgBreakPoint [sufferExplosion]
@@ -592,11 +607,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-1502
-823
+1823
+999
 -1
 -1
-4.0
+5.0
 1
 10
 1
@@ -609,7 +624,7 @@ GRAPHICS-WINDOW
 -160
 160
 -150
-50
+45
 1
 1
 1
@@ -674,7 +689,7 @@ BritishDelay
 BritishDelay
 0
 15
-0.0
+5.0
 1
 1
 Tick
@@ -783,6 +798,18 @@ true
 0
 Polygon -7500403 true true 150 0 0 150 105 150 105 293 195 293 195 150 300 150
 
+battlecruiser
+true
+0
+Polygon -7500403 false true 45 255 150 15 255 255 150 225
+
+battleship
+true
+0
+Polygon -7500403 true true 150 90 105 150 195 150 150 90
+Polygon -7500403 false true 105 150
+Polygon -7500403 false true 105 150 105 210 195 210 195 150
+
 box
 false
 0
@@ -841,6 +868,11 @@ false
 Polygon -7500403 true true 200 193 197 249 179 249 177 196 166 187 140 189 93 191 78 179 72 211 49 209 48 181 37 149 25 120 25 89 45 72 103 84 179 75 198 76 252 64 272 81 293 103 285 121 255 121 242 118 224 167
 Polygon -7500403 true true 73 210 86 251 62 249 48 208
 Polygon -7500403 true true 25 114 16 195 9 204 23 213 25 200 39 123
+
+cruiser
+true
+0
+Polygon -7500403 false true 105 285 105 150 0 150 150 0 300 150 195 150 195 285
 
 cylinder
 false
