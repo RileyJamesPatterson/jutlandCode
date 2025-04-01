@@ -1,6 +1,7 @@
 extensions [
-  csv
-  time
+  csv ; to upload config data from csv
+  time ; to caluclate simulated time of day. displayed to user and used in sunset calc
+  palette ; adds transperency to reduce link clutter
 ]
 ;### Declare Globals###
 globals [
@@ -16,9 +17,11 @@ globals [
   SimTime ;Current date time within simulation
   SunSet ;Date time of SunSet
   NavalTwilight; Date time of end of aprox naval twilight (ie when Visibility from natural light is = 0)
+  TicksUntilDarkness; Calculated value - number of ticks between Sunset (start of dusk) and Naval Twilight (Darkness)
   MaxVisibility; Current Maximum visual distance given lighting conditions, in patches
-  VisibilityReductionStep; calculated amount per tick that visbility descreases between sunset and naval twilight
-  ColorReductionStep; calculated amount per tick that shade of patches descreases between sunset and naval twilight
+  VisibilityReductionStep; calculated amount per tick that Visible range (in patches) descreases between sunset and naval twilight
+  CurrentBrightness ; global variable to hold the brighness of patches
+  BrightnessReductionStep; calculated amount per tick that shade of patches descreases between sunset and naval twilight
 ]
 
 ; ### Declare Agent Breeds ###
@@ -32,7 +35,7 @@ turtleShips-own [
   fleet        ;Imported from orderOfBattle.csv
   enemyfleet   ;calculated
   shipClass    ;Imported from orderOfBattle.csv
-  vanOrder     ;Imported from orderOfBattle.csv
+  twelveInchEquiv     ;Imported from orderOfBattle.csv
   destinationX ;Imported from orderOfBattle.csv
   destinationY ;Imported from orderOfBattle.csv
   maxTurn      ;Imported from orderOfBattle.csv
@@ -68,22 +71,26 @@ to setup-constants
   set TORPEDOSPEED 3
   set TORPEDOLIFETIME 19
   set TORPEDODAMAGE 10
-  Set TORPEDOATTACKRANGE 40
+  Set TORPEDOATTACKRANGE 39
   Set FleetInContact TRUE
   set SimTime time:anchor-to-ticks (time:create "1916/05/31 20:15") 40 "second"
-  set SunSet time:create "1916/05/31 21:13"
-  set NavalTwilight time:create "1916/05/31 23:00"
+  set SunSet time:create "1916/05/31 20:43" ; Starts getting dark time. 20:43 is 30 min before TrueSunset of 21:13 based on sun calc and latitude
+  set NavalTwilight time:create "1916/05/31 21:23"; Finishes getting dark time. Much earlier than true naval twilight, which doesnt actually occur that far north in may
   set MaxVisibility 80 ;Best guess based off 20:05 max range of german battlecruiser salve Tarrant p153
-  let ticksUntilDarkness ( time:difference-between (Sunset) (NavalTwilight) "seconds" / 40 ) ;number of seconds between sunset and darkness / sec per tick
+  set TicksUntilDarkness ( time:difference-between (Sunset) (NavalTwilight) "seconds" / 40 ) ;number of seconds between sunset and darkness / sec per tick
   set VisibilityReductionStep (MaxVisibility / ticksUntilDarkness)
-  set ColorReductionStep ( 3.99 / ticksUntilDarkness)
-  resize-world -150 150 -100 100 ;sets patch size of the world.
+
+
+  resize-world -160 160 -150 50 ;sets patch size of the world.
 
 end
 
 to setup-patches
   ask patches [ set pcolor blue ]
-  ;PLACEHOLDER SETUP FOR INITIAL OPACITY GOES HERE
+  set CurrentBrightness [palette:brightness] of patch 0 0
+  set BrightnessReductionStep ( CurrentBrightness / (2 / 3 * ticksUntilDarkness)) ; cosmetic brightness of patches is reduced between sunset and naval twilight
+
+  ;PLACEHOLDER SETUP FOR INITIAL PATCH OPACITY FOR GUNNERY MODEL GOES HERE
 end
 
 to setup-turtleShips
@@ -105,14 +112,14 @@ to setup-turtleShips
       set heading item 3 rowdata ; Azimuth 0-360
       set name item 4 rowdata ; name of ship as string
       set fleet item 5 rowdata ; str: "British" or "German"
-      set shipClass item 6 rowdata; str: "Battleship" or "Destroyer"
-      set vanOrder item 7 rowdata ; not currently used
+      set shipClass item 6 rowdata; str: "Battleship" or "Destroyer" determines behaviour in sim
+      set twelveInchEquiv item 7 rowdata ; Primary armament equivalent in 12 inch rounds (850lbs), based on projectile weight
       set destinationX item 8 rowdata ; xcor of destination patch
       set destinationY item 9 rowdata ; ycor of destination patch
       set maxTurn item 10 rowdata ; max ship can turn in degrees per tick
       set speed item 11 rowdata ; speed ship moves - patches per tick
-      set gunCaliber item 12 rowdata ;Primary weapon calbier in inches
-      set maxGunRange item 13 rowdata ; max range to look for targets within
+      set gunCaliber item 12 rowdata ;Primary weapon calbier in inches. Not used in Sim, information only
+      set maxGunRange item 13 rowdata ; max range of gun in patches
       set gunRateOfFire item 14 rowdata ; rate of fire, shots per tick
       set bowGuns item 15 rowdata ; number of guns with arc b/w -90 and 90 degrees
       set sternGuns item 16 rowdata ; number of guns with arc b/w 90 and 270 degrees
@@ -198,8 +205,13 @@ to move-turtleTorpedoes
     ]
     ; decrement lifetime
     set lifetime lifetime - 1
-    ; kill expired torpedoes
-    if (lifetime <= 0) or (detonated = 1) [die ]
+    ; kill expired or detonated torpedoes, erasing the pen behind it
+    if (lifetime <= 0) or (detonated = 1) [
+      right 180
+      pen-erase
+      set pen-size 3
+      forward TORPEDOSPEED * TORPEDOLIFETIME
+      die ]
 
   ]
 end
@@ -237,7 +249,7 @@ to move-turtleShips
     print word  ticks ":German Admiral Scheer Signals for withdrawal by individual movement"
 
     ask turtleShips with [fleet = "German" and shipClass = "Battleship"][
-      set destinationX min-pxcor
+      set destinationX min-pxcor + 45
       set destinationY min-pycor
 
     ]
@@ -424,7 +436,7 @@ to fireTurrets [targetShip gunsInArc]
 
   create-link-with targetShip
   ;determine expected number of hits. Fractional hits ok.
-  let hitsOnTarget ( [gunRateOfFire] of self * gunsInArc * 0.03 )  ;PLACEHOLDER FOR GUNNERY MODEL 3% of shots fired at jutland hit
+  let hitsOnTarget ( gunRateOfFire * twelveInchEquiv * gunsInArc * 0.03 )  ;PLACEHOLDER FOR GUNNERY MODEL 3% of shots fired at jutland hit
   ;add more complicated fromula based on hit distribution per "An analysis of the fighting". Some relevant variables are likely range and illumination/smoke
 
   ask patch-here [set pcolor grey] ;placeholder for now, creates patch of grey. could generate smoke once implemented
@@ -432,7 +444,9 @@ to fireTurrets [targetShip gunsInArc]
   ;accumulate expected hits to "damageTakenThisTick" field for resolution at end of tick
   ask targetShip [
     set damageTakenThisTick ( [damageTakenThisTick] of self + hitsOnTarget )
-    set pcolor pink ;placeholder for smoke generation on being hit.
+
+    ;placeholder for smoke generation on being hit.
+    ;set pcolor pink
   ]
 
 
@@ -518,8 +532,13 @@ to reduce-visibility
   if time:is-between? Simtime Sunset NavalTwilight [
     set MaxVisibility max (list 0 (MaxVisibility - VisibilityReductionStep))
     ;darken colors of patches by precalculated increment.
+    ;calculated globally to avoid world width * world length redundant calcs.
+
+    ;decrement CurrentBrightness
+    set CurrentBrightness CurrentBrightness - BrightnessReductionStep
+
     ask patches[
-      set pcolor pcolor - ColorReductionStep
+      palette:set-brightness CurrentBrightness
     ]
   ]
 end
@@ -536,10 +555,14 @@ to set-FleetInContact
     )
   ]
   if all? turtleships [inContactWithEnemy = FALSE] [set FleetInContact FALSE] ;if no ships are in contact with enemy fleet is out of contact
-
-
-
 end
+
+to set-cosmetics
+  ;utility process run at end of of on-tick loop to alter any cosmetic values before being displayed to user.
+  ask links [palette:set-alpha 60]
+end
+
+
 ;### The orchestrating Main procedures ###
 to setup
   clear-all
@@ -551,25 +574,29 @@ to setup
 end
 
 to go
-  clear-links
-  move-turtleTorpedoes
-  move-turtleShips
-  launch-turtleTorpedoes
-  shoot-turtleShips
-  damage-turtleShips
-  reduce-visibility
-  set-FleetInContact
-  tick
+  while [FleetInContact or ticks < 35]
+  [
+    clear-links
+    move-turtleTorpedoes
+    move-turtleShips
+    launch-turtleTorpedoes
+    shoot-turtleShips
+    damage-turtleShips
+    reduce-visibility
+    set-FleetInContact
+    set-cosmetics
+    tick
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
-1723
-1024
+1502
+823
 -1
 -1
-5.0
+4.0
 1
 10
 1
@@ -579,10 +606,10 @@ GRAPHICS-WINDOW
 0
 0
 1
+-160
+160
 -150
-150
--100
-100
+50
 1
 1
 1
@@ -647,7 +674,7 @@ BritishDelay
 BritishDelay
 0
 15
-5.0
+0.0
 1
 1
 Tick
