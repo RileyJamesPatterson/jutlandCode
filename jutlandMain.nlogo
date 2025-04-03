@@ -43,6 +43,8 @@ turtleShips-own [
   hullPoints   ;Imported from orderOfBattle.csv
   damageTakenThisTick  ;calculated.
   sunk         ;calculated, 0=unsunk 1=sunk
+  smoke-timer   ; timer for smoke generation
+  smoke-generation-rate  ; the amount of smoke to be generated
 
 ]
 
@@ -93,38 +95,100 @@ to-report blend-color [c1 c2 fraction]
   report rgb (round r) (round g) (round b)
 end
 
-; update smoke diffusion and decay each tick
-to update-smoke
-  ; Set the p
-  let smoke_scale 50  ;
-  let max_diffusion 0.90
-  let min_diffusion 0.50
-  let max_decay 0.900
-  let min_decay 0.65
 
-  ;; Diffuse smoke: a simplified version of the fick's law
-  let avgSmoke mean [smoke] of patches
-  let diffusion-factor min_diffusion + (avgSmoke / smoke_scale)
-  if diffusion-factor > max_diffusion [set diffusion-factor max_diffusion]
-  diffuse smoke diffusion-factor
-
-  ;; decay smoke
-  ask patches [
-    let decay-factor min_decay + ( smoke / 10)
-    if decay-factor > max_decay [set decay-factor max_decay]
-    set smoke smoke * decay-factor
-
-    if smoke < 0.05 [set smoke 0]
-    let visibility-reduction smoke * 50 ;adjust visibility based on smoke amouont
-    set visibility max (list 0 (100 - visibility-reduction))
-    ;; Change the color for visualization
-    ifelse smoke = 0 [set pcolor blue] [
-      let maxSmoke 3      ; The bigger this number, the less visual the smoke will be range of 0 ~ 100
-      let frac min (list (smoke / maxSmoke) 1)
-      set pcolor blend-color blue black frac]
+to update-smoke-timer
+  ask turtleShips with [smoke-timer > 0] [
+    let smoke-gen smoke-generation-rate
+    set smoke-timer smoke-timer - 1
+    if patch-here != nobody [
+      ask patch-here [
+        set smoke smoke + smoke-gen
+      ]
+    ]
   ]
 end
 
+to generate-smoke [target-ship smoke-time smoke-amount]
+;; generates smoke on the target patch with "smoke-amount" for "smoke-time" ticks
+  ask target-ship [
+    set smoke-generation-rate smoke-amount
+    set smoke-timer smoke-time
+  ]
+end
+
+; update smoke diffusion and decay each tick
+to update-smoke
+  ;; Set parameters
+  let smoke_scale 50               ; scaling for diffusion factor
+  let max_diffusion 0.60           ; maximum diffusion factor
+  let min_diffusion 0.20           ; base diffusion factor
+
+  let min_decay 0.001               ; base decay factor
+  let decay_scale 0.01              ; how quickly decay_factor approaches 1
+  let maxSmoke 5                   ; visual thickness of the smoke. decreases with larger value
+  let windStrength 5               ; Wind strength towards south east (range 1 ~ 5)
+
+  ;; Compute diffusion factor
+  let avgSmoke mean [smoke] of patches
+  let diffusion_factor min_diffusion + ((avgSmoke / smoke_scale) ^ 2)
+  if diffusion_factor > max_diffusion [ set diffusion_factor max_diffusion ]
+
+  ;; Diffusion towards SouthEast
+  ;; Reference:
+  ;; https://www.usni.org/magazines/proceedings/1940/january/effects-meteorological-conditions-tactical-operations-jutland#:~:text=The%20wind%2C%20at%20Jutland%2C%20was,was%20the%20more%20important%20factor.
+  ask patches [
+    let diffused smoke * diffusion_factor
+    set smoke smoke - diffused
+    let source-x pxcor
+    let source-y pycor
+
+    ;; get neigbors within 1 patch distance
+    let nbrs sort (neighbors)
+    set nbrs filter [ n ->
+      (abs([pxcor] of n - source-x) <= 1 and abs([pycor] of n - source-y) <= 1)
+    ] nbrs
+
+    ;; Weights for diffusion based on south east direction
+    let weights []
+    foreach nbrs [ n ->
+      let base_weight 1
+      if ([pxcor] of n > source-x) and ([pycor] of n < source-y) [
+        set base_weight 1.5
+      ]
+      let rand_factor random-float 1
+      set weights lput (base_weight * rand_factor) weights
+    ]
+
+    let total_weight sum weights
+    ;; Distribute the diffused smoke proportionally.
+    let index 0
+    foreach nbrs [
+      n ->
+      let w item index weights
+      ask n [ set smoke smoke + diffused * (w / total_weight) ]
+      set index index + 1
+    ]
+  ]
+
+  ;; Decay and visual updates
+  ask patches [
+    let decay_factor min_decay + ((1 - min_decay) * (smoke / (smoke + decay_scale)))
+    set smoke smoke * decay_factor
+    if smoke < 0.05 [ set smoke 0 ]
+
+    ; Set visibility based on smoke
+    let visibility_reduction smoke
+    set visibility max (list 0 (100 - visibility_reduction))
+    ifelse smoke = 0 [
+      set pcolor blue
+    ] [
+      let frac min (list (smoke / maxSmoke) 1)
+      set pcolor blend-color blue black frac
+    ]
+  ]
+
+
+end
 ;determine whether the target is in line of sight considering visibility
 to-report line-of-sight-factor [shooter target]
   let start-patch [patch-here] of shooter
@@ -186,6 +250,8 @@ to setup-turtleShips
       set hullPoints item 22 rowdata
       set sunk 0
       set damageTakenThisTick 0
+      set smoke-timer 0
+      set smoke-generation-rate 0
     ]
   ]
   file-close-all
@@ -494,7 +560,7 @@ to damage-turtleShips
     repeat discreteHits [checkForCriticalDamage]
     let damage damageTakenThisTick
 
-    ask patch-here [set smoke smoke + 10 * damage] ; generate smoke based on damage taken
+    ;ask patch-here [set smoke smoke + 10 * damage] ; generate smoke based on damage taken
     ;reduce hullpoints and reset DamageTakenThisTick
     set hullPoints ( [hullPoints] of self - [damageTakenThisTick] of self  )
     set damageTakenThisTick 0
@@ -528,27 +594,30 @@ to checkForCriticalDamage
 end
 
 to sufferExplosion
+  ask patch-here [
+    set smoke 500
+  ]
   set sunk 1
-  ask patch-here [set smoke smoke + 30]
+
   show word [name] of self " has suffered a catastophic explosion!"
 end
 
 to sufferEngineRoomHit
   let reducedSpeed max (list 0 ([speed] of self / 2))
-  ask patch-here [set smoke smoke + 10]
+  generate-smoke self 50 20
   set speed reducedSpeed
   show word [name] of self " has suffered a disabling hit to an engine room"
 end
 
 to sufferRudderHit
   let reducedMaxTurn max (list 0 ([maxTurn] of self / 2 ))
+  generate-smoke self 20 10
   set maxturn reducedMaxTurn
-  ask patch-here [set smoke smoke + 5]
   show word [name] of self " has suffered a disabling hit to her rudder"
 end
 
 to sufferTurretHit
-  ask patch-here [set smoke smoke + 5]
+  generate-smoke self 20 10
   show word [name] of self " has suffered a disabling hit to one of her turrets"
   let randNum random 4
   (ifelse
@@ -578,6 +647,7 @@ to go
   shoot-turtleShips
   damage-turtleShips
   update-smoke
+  update-smoke-timer
   tick
 end
 @#$#@#$#@
@@ -680,7 +750,7 @@ CHOOSER
 BritishSignal
 BritishSignal
 "Disengage" "Engage"
-1
+0
 
 PLOT
 3
