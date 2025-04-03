@@ -145,9 +145,7 @@ to update-smoke
     let source-y pycor
 
     ;; get neigbors within 1 patch distance
-    let nbrs sort (filter [ n ->
-      (abs([pxcor] of n - source-x) <= 1 and abs([pycor] of n - source-y) <= 1)
-    ] (sort neighbors))
+    let nbrs sort (neighbors)
 
     ;; Weights for diffusion based on south east direction
     if not empty? nbrs [
@@ -158,7 +156,7 @@ to update-smoke
           set base_weight windStrength
         ]
         let rand_factor random-float 1
-        set weights lput (base_weight * rand_factor) weights
+        set weights lput (precision (base_weight * rand_factor) 3) weights
       ]
 
       ;; Distribute the diffused smoke proportionally.
@@ -191,8 +189,6 @@ to update-smoke
         set pcolor blend-color blue black frac
       ]
     ]
-
-
 end
 ;determine whether the target is in line of sight considering visibility
 to-report line-of-sight-factor [shooter target]
