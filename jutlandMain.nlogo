@@ -156,14 +156,14 @@ end
 ; update smoke diffusion and decay each tick
 to update-smoke
   ;; Set parameters
-  let smoke_scale 50               ; scaling for diffusion factor
+  let smoke_scale 50                ; scaling for diffusion factor
   let max_diffusion 0.60           ; maximum diffusion factor
   let min_diffusion 0.20           ; base diffusion factor
 
-  let min_decay 0.001               ; base decay factor
-  let decay_scale 0.01              ; how quickly decay_factor approaches 1
-  let maxSmoke 5                   ; visual thickness of the smoke. decreases with larger value
-  let windStrength 5               ; Wind strength towards south east (range 1 ~ 5)
+  let min_decay 0.01               ; base decay factor
+  let decay_scale 0.1              ; how quickly decay_factor approaches 1
+  let maxSmoke 100                   ; visual thickness of the smoke. decreases with larger value
+  let windStrength 10               ; Wind strength towards south east (range 1 ~ 5)
 
   ;; Compute diffusion factor
   let avgSmoke mean [smoke] of patches
@@ -181,48 +181,49 @@ to update-smoke
 
     ;; get neigbors within 1 patch distance
     let nbrs sort (neighbors)
-    set nbrs filter [ n ->
-      (abs([pxcor] of n - source-x) <= 1 and abs([pycor] of n - source-y) <= 1)
-    ] nbrs
 
     ;; Weights for diffusion based on south east direction
-    let weights []
-    foreach nbrs [ n ->
-      let base_weight 1
-      if ([pxcor] of n > source-x) and ([pycor] of n < source-y) [
-        set base_weight 1.5
+    if not empty? nbrs [
+      let weights []
+      foreach nbrs [ n ->
+        let base_weight 1
+        if (([pxcor] of n) > source-x) and (([pycor] of n) < source-y) [
+          set base_weight windStrength
+        ]
+        let rand_factor random-float 1
+        set weights lput (precision (base_weight * rand_factor) 3) weights
       ]
-      let rand_factor random-float 1
-      set weights lput (base_weight * rand_factor) weights
-    ]
 
-    let total_weight sum weights
-    ;; Distribute the diffused smoke proportionally.
-    let index 0
-    foreach nbrs [
-      n ->
-      let w item index weights
-      ask n [ set smoke smoke + diffused * (w / total_weight) ]
-      set index index + 1
+      ;; Distribute the diffused smoke proportionally.
+      let total_weight sum weights
+      if total_weight > 0 [
+        let index 0
+        foreach nbrs [
+          n ->
+          let w item index weights
+          ask n [ set smoke smoke + diffused * (w / total_weight) ]
+          set index index + 1
+        ]
+      ]
     ]
   ]
 
-  ;; Decay and visual updates
   ask patches [
-    let decay_factor min_decay + ((1 - min_decay) * (smoke / (smoke + decay_scale)))
-    set smoke smoke * decay_factor
-    if smoke < 0.05 [ set smoke 0 ]
+      ;; Decay and visual updates
+      let decay_factor min_decay + ((1 - min_decay) * (smoke / (smoke + decay_scale)))
+      set smoke smoke * decay_factor
+      if smoke < 0.05 [ set smoke 0 ]
 
-    ; Set visibility based on smoke
-    let visibility_reduction smoke
-    set visibility max (list 0 (100 - visibility_reduction))
-    ifelse smoke = 0 [
-      set pcolor blue
-    ] [
-      let frac min (list (smoke / maxSmoke) 1)
-      set pcolor blend-color blue gray frac
+      ; Set visibility based on smoke
+      let visibility_reduction smoke
+      set visibility max (list 0 (100 - visibility_reduction))
+      ifelse smoke = 0 [
+        set pcolor blue
+      ] [
+        let frac min (list (smoke / maxSmoke) 1)
+        set pcolor blend-color blue black frac
+      ]
     ]
-  ]
 end
 ; ==========================================;
 ; ============  Visibility =================;
@@ -687,14 +688,14 @@ end
 to sufferExplosion
   set damageTakenThisTick hullPoints
   ask patch-here [
-    set smoke 100
+    set smoke 5000
   ]
   if debug [show word [name] of self " has suffered a catastophic explosion!"]
 end
 
 to sufferEngineRoomHit
   let reducedSpeed max (list 0 ([speed] of self / 2))
-  generate-smoke self 20 20
+  generate-smoke self 50 100
   set speed reducedSpeed
   if debug [show word [name] of self " has suffered a disabling hit to an engine room"]
 end
