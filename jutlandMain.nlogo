@@ -27,6 +27,9 @@ globals [
 ; ### Declare Agent Breeds ###
 breed [turtleShips turtleShip]
 breed [turtleTorpedoes turtleTorpedo]
+breed [torpStart torpStarts] ;starting point for torpedo launch, used to create link visualizing torpedo track
+undirected-link-breed [torpTracks torpTrack]
+directed-link-breed [gunTracks gunTrack]
 
 ; ### Declare Agent Variables ###
 turtleShips-own [
@@ -144,12 +147,12 @@ to setup-turtleShips
   ask turtleShips[
     if fleet = "British"[
       ;set up visuals of British Fleet
-      set color green + 3 ;placeholder
+      set color red + 3 ;placeholder
       set enemyFleet "German" ;populated calculated attribute
     ]
     if fleet = "German"[
       ;set up visuals of German Fleet
-      set color red + 3 ;placeholder
+      set color yellow + 3 ;placeholder
       set enemyFleet "British"
     ]
     if shipType = "destroyer" [
@@ -170,6 +173,7 @@ to setup-turtleShips
     if shipType = "battleship" [
       set size 5
     ]
+    palette:set-alpha 190
 
   ]
 end
@@ -219,12 +223,8 @@ to move-turtleTorpedoes
     ]
     ; decrement lifetime
     set lifetime lifetime - 1
-    ; kill expired or detonated torpedoes, erasing the pen behind it
     if (lifetime <= 0) or (detonated = 1) [
-      right 180
-      pen-erase
-      set pen-size 3
-      forward TORPEDOSPEED * TORPEDOLIFETIME
+      ask in-torpTrack-neighbors [ die ] ;kill hidden torpStart agent linked to torp
       die ]
 
   ]
@@ -388,6 +388,7 @@ to launch-turtleTorpedoes
           let targetPatch lead-targetTorpedoes targetShip TORPEDOSPEED
           ;PLACEHOLDER FOR OFFSET CALCULATION TO SIMULATE BEST EFFORTS OF CREW TO LEAD TARGET
           let torpHeading towards targetPatch
+          let newtorp nobody
           repeat reps[
             ask patch-here[
             sprout-turtleTorpedoes 1 [
@@ -397,8 +398,13 @@ to launch-turtleTorpedoes
               set lifetime TORPEDOLIFETIME
               set shape "line half"
               set color white
-              set pen-size .5
-              pen-down
+              set newtorp self
+              ]
+
+            ;create a hidden agent to draw torpedo track to
+            sprout-torpStart 1 [
+              create-torpTrack-with newtorp
+              set hidden? True
               ]
             ]
             set torpedoTubes -1
@@ -448,7 +454,7 @@ end
 
 to fireTurrets [targetShip gunsInArc]
 
-  create-link-with targetShip
+  create-guntrack-to targetShip
   ;determine expected number of hits. Fractional hits ok.
   let hitsOnTarget ( gunRateOfFire * twelveInchEquiv * gunsInArc * 0.03 )  ;PLACEHOLDER FOR GUNNERY MODEL 3% of shots fired at jutland hit
   ;add more complicated fromula based on hit distribution per "An analysis of the fighting". Some relevant variables are likely range and illumination/smoke
@@ -498,6 +504,9 @@ end
 
 to sink-TurtleShip
   set shape "fire"
+  if fleet = "British"[ set color red ]
+  if fleet = "German"[ set color lime ]
+
   stamp
   die
 end
@@ -580,7 +589,12 @@ end
 
 to set-cosmetics
   ;utility process run at end of of on-tick loop to alter any cosmetic values before being displayed to user.
-  ask links [palette:set-alpha 60]
+  ask gunTracks [palette:set-alpha 60]
+  ask torpTracks [
+    set color white
+    ;set pen-size .5
+              ;pen-down
+  ]
 end
 
 
@@ -597,7 +611,7 @@ end
 to go
   while [FleetInContact or ticks < 35]
   [
-    clear-links
+    ask gunTracks [die]
     move-turtleTorpedoes
     move-turtleShips
     launch-turtleTorpedoes
@@ -613,11 +627,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-1181
-607
+1502
+803
 -1
 -1
-3.0
+4.0
 1
 10
 1
@@ -695,7 +709,7 @@ BritishDelay
 BritishDelay
 0
 15
-8.0
+15.0
 1
 1
 Tick
@@ -804,6 +818,7 @@ default
 true
 0
 Polygon -7500403 true true 150 5 40 250 150 205 260 250
+Polygon -16777216 true false 150 15 120 90 180 90
 
 airplane
 true
@@ -814,18 +829,13 @@ arrow
 true
 0
 Polygon -7500403 true true 150 0 0 150 105 150 105 293 195 293 195 150 300 150
+Polygon -16777216 true false 150 15 150 15 90 90 210 90
 
 battlecruiser
 true
 0
 Polygon -7500403 false true 45 255 150 15 255 255 150 225
-
-battleship
-true
-0
-Polygon -7500403 true true 150 90 105 150 195 150 150 90
-Polygon -7500403 false true 105 150
-Polygon -7500403 false true 105 150 105 210 195 210 195 150
+Polygon -16777216 true false 150 15 120 105 180 105
 
 box
 false
@@ -890,6 +900,7 @@ cruiser
 true
 0
 Polygon -7500403 false true 105 285 105 150 0 150 150 0 300 150 195 150 195 285
+Polygon -16777216 true false 150 15 105 60 180 60 195 60
 
 cylinder
 false
