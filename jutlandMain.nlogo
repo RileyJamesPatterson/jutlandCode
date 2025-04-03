@@ -100,13 +100,13 @@ to setup-turtleShips
   file-close-all ;protects against unfinished setups that kept csv locked
 
   file-open "orderOfBattle.csv"
-  print "=== Loading Ships from orderOfBattle.csv ==="
+  if debug [print "=== Loading Ships from orderOfBattle.csv ==="]
   let csvHeadings csv:from-row file-read-line
-  print csvHeadings
+  if debug [print csvHeadings]
   while [not file-at-end?][
     ;for each record of csv, create the specified ship
     let rowdata csv:from-row file-read-line
-    print rowdata
+    if debug [print rowdata]
     create-turtleShips 1[
       set shipId item 0 rowdata
       set xcor item 1 rowdata
@@ -178,18 +178,18 @@ to load-DamageGlobals
   ;loads the chances of sustaining crtical damage and converts to breakpoints
 
   file-close-all ;protects against unfinished setups that kept csv locked
-  print "=== Loading Damage Breakpoints from *Class*Damage.csv ==="
+  if debug [print "=== Loading Damage Breakpoints from *Class*Damage.csv ==="]
 
-  print "loading Battleship Damage Breakpoints"
+  if debug [print "loading Battleship Damage Breakpoints"]
   file-open "battleShipDamage.csv"
   let csvHeadings csv:from-row file-read-line
-  print csvHeadings
+  if debug [print csvHeadings]
   let rowdata csv:from-row file-read-line
   set BattleShipMagazineDmgBreakPoint item 1 rowdata
   set BattleShipEngineDmgBreakPoint (item 2 rowdata + BattleShipMagazineDmgBreakPoint)
   set BattleShipRudderDmgBreakPoint (item 3 rowdata + BattleShipEngineDmgBreakPoint)
   set BattleShipTurretDmgBreakPoint (item 4 rowdata + BattleShipRudderDmgBreakPoint)
-  print (list  BattleShipMagazineDmgBreakPoint BattleShipEngineDmgBreakPoint BattleShipRudderDmgBreakPoint BattleShipTurretDmgBreakPoint )
+  if debug [print (list  BattleShipMagazineDmgBreakPoint BattleShipEngineDmgBreakPoint BattleShipRudderDmgBreakPoint BattleShipTurretDmgBreakPoint )]
   file-close-all
 end
 
@@ -208,10 +208,10 @@ to move-turtleTorpedoes
           ifelse checkForDet self myself [
             set shipSufferingDetonation self
           ]
-          [ print word [name] of self " has narrowly evaded torpedoes"]
+          [ if debug [print word [name] of self " has narrowly evaded torpedoes"]]
         ]
         if shipSufferingDetonation != nobody [
-          print word [name] of shipSufferingDetonation " has been hit by a torepedo!"
+          if debug [print word [name] of shipSufferingDetonation " has been hit by a torepedo!"]
           ask shipSufferingDetonation [set damageTakenThisTick damageTakenThisTick + TORPEDODAMAGE]
           set detonated 1
         ]
@@ -260,7 +260,7 @@ to move-turtleShips
 
   ;German Battleships setting destination to southern edge at GermanTurnTime,
   if ticks = GermanDisengageSignalTick[ ; value set by slider, run once (destinations static)
-    print word  ticks ":German Admiral Scheer Signals for withdrawal by individual movement"
+    if debug [print word  ticks ":German Admiral Scheer Signals for withdrawal by individual movement"]
 
     ask turtleShips with [fleet = "German" and shipBehaviour = "Battleship"][
       set destinationX min-pxcor + 45
@@ -482,7 +482,7 @@ to damage-turtleShips
     set lostHp ([lostHp] of self + [damageTakenThisTick] of self )
     set damageTakenThisTick 0
     if hullPoints <= 0 [
-      show word [name] of self " has been taken out of action by cumulative damage"
+      if debug [show word [name] of self " has been taken out of action by cumulative damage"]
       set sunk 1
     ]
     if sunk = 1 [
@@ -522,23 +522,23 @@ end
 
 to sufferExplosion
   set damageTakenThisTick hullPoints
-  show word [name] of self " has suffered a catastophic explosion!"
+  if debug [show word [name] of self " has suffered a catastophic explosion!"]
 end
 
 to sufferEngineRoomHit
   let reducedSpeed max (list 0 ([speed] of self / 2))
   set speed reducedSpeed
-  show word [name] of self " has suffered a disabling hit to an engine room"
+  if debug [show word [name] of self " has suffered a disabling hit to an engine room"]
 end
 
 to sufferRudderHit
   let reducedMaxTurn max (list 0 ([maxTurn] of self / 2 ))
   set maxturn reducedMaxTurn
-  show word [name] of self " has suffered a disabling hit to her rudder"
+  if debug [show word [name] of self " has suffered a disabling hit to her rudder"]
 end
 
 to sufferTurretHit
-  show word [name] of self " has suffered a disabling hit to one of her turrets"
+  if debug [show word [name] of self " has suffered a disabling hit to one of her turrets"]
   let randNum random 4
   (ifelse
     randNum = 0 [ set bowGuns max (list 0 ([bowGuns] of self - 2 ))]
@@ -680,7 +680,7 @@ GermanDisengageSignalTick
 GermanDisengageSignalTick
 0
 10
-0.0
+4.0
 1
 1
 Tick
@@ -695,7 +695,7 @@ BritishDelay
 BritishDelay
 0
 15
-5.0
+8.0
 1
 1
 Tick
@@ -751,6 +751,17 @@ FleetInContact
 17
 1
 11
+
+SWITCH
+37
+508
+177
+541
+debug
+debug
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1136,6 +1147,30 @@ NetLogo 6.4.0
     </enumeratedValueSet>
     <enumeratedValueSet variable="BritishSignal">
       <value value="&quot;Engage&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Monte Carlo" repetitions="10" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="150"/>
+    <exitCondition>"FleetInContact" = FALSE</exitCondition>
+    <metric>time:show SimTime "HH:mm:ss"</metric>
+    <metric>count turtleShips with [fleet = "British"]</metric>
+    <metric>sum [hullPoints] of turtleShips with [fleet = "British"]</metric>
+    <metric>sum [damageTakenThisTick] of turtleShips with [fleet = "British"]</metric>
+    <metric>sum [bowGuns + sternGuns + portGuns + starbGuns] of turtleShips with [fleet = "British"]</metric>
+    <metric>count turtleShips with [fleet = "German"]</metric>
+    <metric>sum [hullPoints] of turtleShips with [fleet = "German"]</metric>
+    <metric>sum [damageTakenThisTick] of turtleShips with [fleet = "German"]</metric>
+    <metric>sum [bowGuns + sternGuns + portGuns + starbGuns] of turtleShips with [fleet = "German"]</metric>
+    <enumeratedValueSet variable="debug">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="BritishDelay" first="0" step="1" last="10"/>
+    <steppedValueSet variable="GermanDisengageSignalTick" first="0" step="1" last="15"/>
+    <enumeratedValueSet variable="BritishSignal">
+      <value value="&quot;Engage&quot;"/>
+      <value value="&quot;Disengage&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
