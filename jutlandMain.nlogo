@@ -100,8 +100,7 @@ to setup-patches
   set CurrentBrightness [palette:brightness] of patch 0 0
   set BrightnessReductionStep ( CurrentBrightness / (2 / 3 * ticksUntilDarkness)) ; cosmetic brightness of patches is reduced between sunset and naval twilight
 
-  ;PLACEHOLDER SETUP FOR INITIAL PATCH OPACITY FOR GUNNERY MODEL GOES HERE
-  ask patches [
+   ask patches [
     set pcolor blue
     set smoke 0
     set visibility 100
@@ -470,7 +469,6 @@ to launch-turtleTorpedoes
       if targetShip != nobody [
         if distance targetShip <= TORPEDOATTACKRANGE[
           let targetPatch lead-targetTorpedoes targetShip TORPEDOSPEED
-          ;PLACEHOLDER FOR OFFSET CALCULATION TO SIMULATE BEST EFFORTS OF CREW TO LEAD TARGET
           let torpHeading towards targetPatch
           let newtorp nobody
           repeat reps[
@@ -691,19 +689,10 @@ to setup
   setup-patches
   setup-turtleShips
   load-DamageGlobals
-  set Signal "Engage"
   reset-ticks
 end
 
 to go
-  clear-links
-  move-turtleTorpedoes
-  move-turtleShips
-  launch-turtleTorpedoes
-  shoot-turtleShips
-  damage-turtleShips
-  update-smoke
-  tick
   while [FleetInContact or ticks < 35]
   [
     ask gunTracks [die]
@@ -715,6 +704,7 @@ to go
     reduce-visibility
     set-FleetInContact
     set-cosmetics
+    update-smoke
     tick
   ]
 end
@@ -722,7 +712,7 @@ end
 GRAPHICS-WINDOW
 211
 10
-1502
+1503
 803
 -1
 -1
@@ -804,7 +794,7 @@ BritishDelay
 BritishDelay
 0
 15
-15.0
+0.0
 1
 1
 Tick
