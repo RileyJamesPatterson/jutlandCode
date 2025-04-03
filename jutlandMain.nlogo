@@ -88,7 +88,7 @@ to setup-constants
 end
 
 to setup-patches
-  ask patches [ set pcolor blue ]
+  ask patches [ set pcolor blue + 2 ]
   set CurrentBrightness [palette:brightness] of patch 0 0
   set BrightnessReductionStep ( CurrentBrightness / (2 / 3 * ticksUntilDarkness)) ; cosmetic brightness of patches is reduced between sunset and naval twilight
 
@@ -154,22 +154,21 @@ to setup-turtleShips
     ]
     if shipType = "destroyer" [
       set shape "arrow"
-      set size 1
+      set size 2
     ]
 
      if shipType = "battlecruiser" [
-      set size 2.5
+      set size 5
       set shape "battlecruiser"
     ]
 
     if shipType = "cruiser" [
-      set size 1.7
+      set size 3.4
       set shape "cruiser"
     ]
 
     if shipType = "battleship" [
-      set size 2.5
-
+      set size 5
     ]
 
   ]
@@ -607,11 +606,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-1823
-999
+1181
+607
 -1
 -1
-5.0
+3.0
 1
 10
 1
