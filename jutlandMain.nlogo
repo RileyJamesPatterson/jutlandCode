@@ -638,10 +638,10 @@ ticks
 30.0
 
 BUTTON
-0
-11
-69
-44
+31
+20
+100
+53
 Setup
 setup
 NIL
@@ -655,10 +655,10 @@ NIL
 1
 
 BUTTON
-80
-11
-143
-44
+111
+20
+174
+53
 Go
 go
 T
@@ -702,20 +702,20 @@ Tick
 HORIZONTAL
 
 CHOOSER
-25
-160
-163
-205
+30
+155
+168
+200
 BritishSignal
 BritishSignal
 "Disengage" "Engage"
 1
 
 PLOT
-7
-342
-207
-492
+6
+331
+206
+481
 Count of Fleet Hull Points 
 time
 totals
@@ -731,9 +731,9 @@ PENS
 "German" 1.0 0 -16777216 true "" "plot sum [hullPoints] of turtleShips with [fleet = \"German\"]"
 
 MONITOR
-30
+32
 215
-162
+164
 260
 SimTime
 time:show SimTime \"yyyy-MM-dd HH:mm:ss\"
@@ -742,9 +742,9 @@ time:show SimTime \"yyyy-MM-dd HH:mm:ss\"
 11
 
 MONITOR
-31
+41
 272
-144
+154
 317
 Fleets In Contact
 FleetInContact
@@ -753,10 +753,10 @@ FleetInContact
 11
 
 SWITCH
-37
-508
-177
-541
+29
+495
+169
+528
 debug
 debug
 1
