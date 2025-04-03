@@ -114,6 +114,14 @@ end
 ; ==========================================;
 ; =========== SMOKE RELATED ================;
 ; ==========================================;
+to-report compute-weight [n sx sy windStrength]
+  let base_weight 1
+  if (([pxcor] of n) > sx) and (([pycor] of n) < sy) [
+    set base_weight windStrength
+  ]
+  report base_weight * random-float 1
+end
+
 to-report blend-color [c1 c2 fraction]
   let rgb1 extract-rgb c1
   let rgb2 extract-rgb c2
@@ -167,7 +175,7 @@ to update-smoke
 
   ;; Compute diffusion factor
   let avgSmoke mean [smoke] of patches
-  let diffusion_factor min_diffusion + ((avgSmoke / smoke_scale) ^ 2)
+  let diffusion_factor min_diffusion + ((avgSmoke / smoke_scale))
   if diffusion_factor > max_diffusion [ set diffusion_factor max_diffusion ]
 
   ;; Diffusion towards SouthEast
@@ -176,22 +184,18 @@ to update-smoke
   ask patches [
     let diffused smoke * diffusion_factor
     set smoke smoke - diffused
-    let source-x pxcor
-    let source-y pycor
+    let sx pxcor
+    let sy pycor
 
     ;; get neigbors within 1 patch distance
     let nbrs sort (neighbors)
+
 
     ;; Weights for diffusion based on south east direction
     if not empty? nbrs [
       let weights []
       foreach nbrs [ n ->
-        let base_weight 1
-        if (([pxcor] of n) > source-x) and (([pycor] of n) < source-y) [
-          set base_weight windStrength
-        ]
-        let rand_factor random-float 1
-        set weights lput (precision (base_weight * rand_factor) 3) weights
+        set weights lput (compute-weight n sx sy windStrength) weights
       ]
 
       ;; Distribute the diffused smoke proportionally.
@@ -215,8 +219,8 @@ to update-smoke
       if smoke < 0.05 [ set smoke 0 ]
 
       ; Set visibility based on smoke
-      let visibility_reduction smoke
-      set visibility max (list 0 (100 - visibility_reduction))
+      let visibility_reduction smoke / 500
+      set visibility max (list 0 (visibility_reduction))
       ifelse smoke = 0 [
         set pcolor blue
       ] [
@@ -226,7 +230,7 @@ to update-smoke
     ]
 end
 ; ==========================================;
-; ============  Visibility =================;
+; ============   Accuracy  =================;
 ; ==========================================;
 
 to-report line-of-sight-factor [shooter target]
@@ -612,7 +616,8 @@ to fireTurrets [targetShip gunsInArc]
 
   create-guntrack-to targetShip
   ;determine expected number of hits. Fractional hits ok.
-  let hitsOnTarget ( gunRateOfFire * twelveInchEquiv * gunsInArc * 0.03 )  ;PLACEHOLDER FOR GUNNERY MODEL 3% of shots fired at jutland hit
+  let losFactor line-of-sight-factor self targetShip
+  let hitsOnTarget ( gunRateOfFire * twelveInchEquiv * gunsInArc * 0.03 * losFactor)  ;PLACEHOLDER FOR GUNNERY MODEL 3% of shots fired at jutland hit
   ;add more complicated fromula based on hit distribution per "An analysis of the fighting". Some relevant variables are likely range and illumination/smoke
 
   ask patch-here [set pcolor grey] ;placeholder for now, creates patch of grey. could generate smoke once implemented
