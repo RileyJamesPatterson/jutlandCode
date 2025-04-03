@@ -69,6 +69,11 @@ turtleTorpedoes-own [
   detonated ;calculated 0 for undetonated, 1 for detonated
 ]
 
+patches-own [
+  smoke
+  visibility
+]
+
 
 ;### Procedures that run on setup. ###
 
@@ -96,6 +101,83 @@ to setup-patches
   set BrightnessReductionStep ( CurrentBrightness / (2 / 3 * ticksUntilDarkness)) ; cosmetic brightness of patches is reduced between sunset and naval twilight
 
   ;PLACEHOLDER SETUP FOR INITIAL PATCH OPACITY FOR GUNNERY MODEL GOES HERE
+  ask patches [
+    set pcolor blue
+    set smoke 0
+    set visibility 100
+  ]
+end
+
+to-report blend-color [c1 c2 fraction]
+  let rgb1 extract-rgb c1
+  let rgb2 extract-rgb c2
+  let r1 item 0 rgb1
+  let g1 item 1 rgb1
+  let b1 item 2 rgb1
+  let r2 item 0 rgb2
+  let g2 item 1 rgb2
+  let b2 item 2 rgb2
+
+  let r ((r1 * (1 - fraction)) + (r2 * fraction))
+  let g ((g1 * (1 - fraction)) + (g2 * fraction))
+  let b ((b1 * (1 - fraction)) + (b2 * fraction))
+
+  report rgb (round r) (round g) (round b)
+end
+
+; update smoke diffusion and decay each tick
+to update-smoke
+  ; Set the p
+  let smoke_scale 50  ;
+  let max_diffusion 0.90
+  let min_diffusion 0.50
+  let max_decay 0.900
+  let min_decay 0.65
+
+  ;; Diffuse smoke: a simplified version of the fick's law
+  let avgSmoke mean [smoke] of patches
+  let diffusion-factor min_diffusion + (avgSmoke / smoke_scale)
+  if diffusion-factor > max_diffusion [set diffusion-factor max_diffusion]
+  diffuse smoke diffusion-factor
+
+  ;; decay smoke
+  ask patches [
+    let decay-factor min_decay + ( smoke / 10)
+    if decay-factor > max_decay [set decay-factor max_decay]
+    set smoke smoke * decay-factor
+
+    if smoke < 0.05 [set smoke 0]
+    let visibility-reduction smoke * 50 ;adjust visibility based on smoke amouont
+    set visibility max (list 0 (100 - visibility-reduction))
+    ;; Change the color for visualization
+    ifelse smoke = 0 [set pcolor blue] [
+      let maxSmoke 3      ; The bigger this number, the less visual the smoke will be range of 0 ~ 100
+      let frac min (list (smoke / maxSmoke) 1)
+      set pcolor blend-color blue black frac]
+  ]
+end
+
+;determine whether the target is in line of sight considering visibility
+to-report line-of-sight-factor [shooter target]
+  let start-patch [patch-here] of shooter
+  let end-patch [patch-here] of target
+  let dist [distance target] of shooter
+  let nsteps max (list 1 floor dist)
+  let x (([pxcor] of end-patch - [pxcor] of start-patch) / nsteps)
+  let y (([pycor] of end-patch - [pycor] of start-patch) / nsteps)
+  let currentX [pxcor] of start-patch
+  let currentY [pycor] of start-patch
+  let minFactor 1.0
+  repeat nsteps [
+    let currentPatch patch (round currentX) (round currentY)
+    if currentPatch != nobody [
+      let patchVis ([visibility] of currentPatch) / 100
+      if patchVis < minFactor [ set minFactor patchVis ]
+    ]
+    set currentX currentX + x
+    set currentY currentY + y
+  ]
+  report minFactor
 end
 
 to setup-turtleShips
@@ -230,6 +312,8 @@ to move-turtleTorpedoes
   ]
 end
 
+
+
 to-report checkForDet [shipAgent torpAgent]
  ;Takes ship agent and torp agent. Calculates prob of collision based on their orientation,
  ;determines if ship is hit. returns bool.
@@ -258,6 +342,7 @@ to move-turtleShips
   ;2-adopt desired heading subject to turn rate
   ;3-move ships forward
 
+  ; need to implement range reduction depending on visibility
   ;German Battleships setting destination to southern edge at GermanTurnTime,
   if ticks = GermanDisengageSignalTick[ ; value set by slider, run once (destinations static)
     if debug [print word  ticks ":German Admiral Scheer Signals for withdrawal by individual movement"]
@@ -270,7 +355,6 @@ to move-turtleShips
   ]
   ;German destroyers either a)close with closest taget and fire torepedoes or b) withdraw if no torpedoes
   ;run every tick >= of german signal, destinations are dynamic
-
   if ticks >= GermanDisengageSignalTick[
     ask turtleShips with [fleet = "German" and shipBehaviour = "Destroyer"][
       if torpedoTubes > 0[
@@ -459,8 +543,6 @@ to fireTurrets [targetShip gunsInArc]
   let hitsOnTarget ( gunRateOfFire * twelveInchEquiv * gunsInArc * 0.03 )  ;PLACEHOLDER FOR GUNNERY MODEL 3% of shots fired at jutland hit
   ;add more complicated fromula based on hit distribution per "An analysis of the fighting". Some relevant variables are likely range and illumination/smoke
 
-  ask patch-here [set pcolor grey] ;placeholder for now, creates patch of grey. could generate smoke once implemented
-
   ;accumulate expected hits to "damageTakenThisTick" field for resolution at end of tick
   ask targetShip [
     set damageTakenThisTick ( [damageTakenThisTick] of self + hitsOnTarget )
@@ -482,7 +564,9 @@ to damage-turtleShips
     if partialHits >= random-float 1 [set discreteHits discreteHits + 1]
     ;for each hit, check for critical damage
     repeat discreteHits [checkForCriticalDamage]
+    let damage damageTakenThisTick
 
+    ask patch-here [set smoke smoke + 10 * damage] ; generate smoke based on damage taken
     ;reduce hullpoints and reset DamageTakenThisTick
     set hullPoints ( [hullPoints] of self - [damageTakenThisTick] of self  )
     set lostHp ([lostHp] of self + [damageTakenThisTick] of self )
@@ -531,11 +615,13 @@ end
 
 to sufferExplosion
   set damageTakenThisTick hullPoints
+  ask patch-here [set smoke smoke + 30]
   if debug [show word [name] of self " has suffered a catastophic explosion!"]
 end
 
 to sufferEngineRoomHit
   let reducedSpeed max (list 0 ([speed] of self / 2))
+  ask patch-here [set smoke smoke + 10]
   set speed reducedSpeed
   if debug [show word [name] of self " has suffered a disabling hit to an engine room"]
 end
@@ -605,10 +691,19 @@ to setup
   setup-patches
   setup-turtleShips
   load-DamageGlobals
+  set Signal "Engage"
   reset-ticks
 end
 
 to go
+  clear-links
+  move-turtleTorpedoes
+  move-turtleShips
+  launch-turtleTorpedoes
+  shoot-turtleShips
+  damage-turtleShips
+  update-smoke
+  tick
   while [FleetInContact or ticks < 35]
   [
     ask gunTracks [die]
@@ -625,7 +720,7 @@ to go
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+211
 10
 1502
 803
