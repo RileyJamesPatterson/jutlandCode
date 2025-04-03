@@ -88,7 +88,7 @@ to setup-constants
 end
 
 to setup-patches
-  ask patches [ set pcolor blue + 2 ]
+  ask patches [ set pcolor blue ]
   set CurrentBrightness [palette:brightness] of patch 0 0
   set BrightnessReductionStep ( CurrentBrightness / (2 / 3 * ticksUntilDarkness)) ; cosmetic brightness of patches is reduced between sunset and naval twilight
 
@@ -144,12 +144,12 @@ to setup-turtleShips
   ask turtleShips[
     if fleet = "British"[
       ;set up visuals of British Fleet
-      set color red ;placeholder
+      set color green + 3 ;placeholder
       set enemyFleet "German" ;populated calculated attribute
     ]
     if fleet = "German"[
       ;set up visuals of German Fleet
-      set color black ;placeholder
+      set color red + 3 ;placeholder
       set enemyFleet "British"
     ]
     if shipType = "destroyer" [
@@ -485,7 +485,14 @@ to damage-turtleShips
       show word [name] of self " has been taken out of action by cumulative damage"
       set sunk 1
     ]
-    if sunk = 1 [ sink-TurtleShip]
+    if sunk = 1 [
+      ifelse fleet = "British"[
+        set color green
+      ][
+        set color red
+      ]
+      sink-TurtleShip
+    ]
   ]
 end
 
@@ -702,7 +709,7 @@ CHOOSER
 BritishSignal
 BritishSignal
 "Disengage" "Engage"
-0
+1
 
 PLOT
 7
@@ -912,7 +919,7 @@ false
 0
 Polygon -7500403 true true 151 286 134 282 103 282 59 248 40 210 32 157 37 108 68 146 71 109 83 72 111 27 127 55 148 11 167 41 180 112 195 57 217 91 226 126 227 203 256 156 256 201 238 263 213 278 183 281
 Polygon -955883 true false 126 284 91 251 85 212 91 168 103 132 118 153 125 181 135 141 151 96 185 161 195 203 193 253 164 286
-Polygon -2674135 true false 155 284 172 268 172 243 162 224 148 201 130 233 131 260 135 282
+Polygon -7500403 true true 155 284 172 268 172 243 162 224 148 201 130 233 131 260 135 282
 
 fish
 false
