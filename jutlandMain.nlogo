@@ -609,7 +609,7 @@ to setup
 end
 
 to go
-  while [FleetInContact or ticks < 35]
+  if FleetInContact and ticks < 70
   [
     ask gunTracks [die]
     move-turtleTorpedoes
@@ -1160,10 +1160,10 @@ NetLogo 6.4.0
       <value value="&quot;Engage&quot;"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="Monte Carlo" repetitions="10" runMetricsEveryStep="true">
+  <experiment name="Monte Carlo" repetitions="5" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="150"/>
+    <timeLimit steps="70"/>
     <exitCondition>"FleetInContact" = FALSE</exitCondition>
     <metric>time:show SimTime "HH:mm:ss"</metric>
     <metric>count turtleShips with [fleet = "British"]</metric>
