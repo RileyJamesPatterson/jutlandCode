@@ -1,0 +1,12 @@
+# Temporary Net Logo Model
+*.tmp.nlogo
+
+# MC Simulation Outputs
+*.csv
+
+# Plotting outputs
+*.jpg
+
+# Python Virtual Environment
+msmg_venv/
+
