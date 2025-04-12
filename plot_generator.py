@@ -12,18 +12,41 @@ TIME_PLOTS = os.path.join(OUTPUT_PATH, "time_plots")
 BOX_PLOTS = os.path.join(OUTPUT_PATH, "box_plots")
 HEAT_MAPS = os.path.join(OUTPUT_PATH, "heat_maps")
 
+SIM_END_TIC = 70
+
 # Use glob to find all .jpg files in the current directory
-jpg_files = glob.glob('*.jpg', root_dir=OUTPUT_PATH)
+jpg_files = glob.glob("*.jpg", root_dir=OUTPUT_PATH)
 
 # Loop through and remove each file
 for jpg in jpg_files:
     os.remove(os.path.join(OUTPUT_PATH, jpg))
 
 df = pd.read_csv(INPUT_TABLE_FILE, skiprows=6)
-df.columns = ['Run_id', 'Debug_Flag', 'British_Delay', 'German_Disengage_Delay', 'British_Signal', 'Simulation_Tick', 
-              'Simulation_Time', 'British_Ship_Count', 'British_Fleet_Health', 'British_Fleet_Damage_This_Tick', 'British_Gunnery_Count', 
-              'German_Ship_Count', 'German_Fleet_Health', 'German_Fleet_Damage_This_Tick', 'German_Gunnery_Count']
+if len(df.columns) == 15:
+    df.columns = ['Run_id', 'Debug_Flag', 'British_Delay', 'German_Disengage_Delay', 'British_Signal',
+                  'Simulation_Tick', 'Simulation_Time', 
+                  'British_Ship_Count', 'British_Fleet_Health', 'British_Fleet_Damage_This_Tick', 'British_Gunnery_Count', 
+                  'German_Ship_Count', 'German_Fleet_Health', 'German_Fleet_Damage_This_Tick', 'German_Gunnery_Count']
 
+elif len(df.columns) == 23:
+    df.columns = ['Run_id', 'Debug_Flag', 'British_Delay', 'German_Disengage_Delay', 'British_Signal',
+                  'Simulation_Tick', 'Simulation_Time', 
+                  
+                  'British_Ship_Count',
+                  'British_Ship_Count-destroyer', 'British_Ship_Count-battlecruiser',
+                  'British_Ship_Count-cruiser','British_Ship_Count-battleship',
+                  'British_Fleet_Health', 'British_Fleet_Damage_This_Tick', 'British_Gunnery_Count',
+                  
+                  'German_Ship_Count',
+                  'German_Ship_Count-destroyer', 'German_Ship_Count-battlecruiser',
+                  'German_Ship_Count-cruiser','German_Ship_Count-battleship',
+                  'German_Fleet_Health', 'German_Fleet_Damage_This_Tick', 'German_Gunnery_Count']
+    
+else:
+    raise ValueError("Unsupported number of MC variables. Please specify table format and retry.")
+
+df["British_Damage_Cumulative"] = df.groupby('Run_id')['British_Fleet_Damage_This_Tick'].cumsum()
+df["German_Damage_Cumulative"] = df.groupby('Run_id')['German_Fleet_Damage_This_Tick'].cumsum()
 
 ######################################
 ### Plotting Sim Outputs over Time ###
@@ -32,7 +55,13 @@ def plot_all_over_time():
     group_vars = ["British_Delay", "German_Disengage_Delay"]
     british_signals = ["Disengage", "Engage"]
     plot_vars = ['British_Ship_Count', 'British_Fleet_Health', 'British_Gunnery_Count', 
-              'German_Ship_Count', 'German_Fleet_Health', 'German_Gunnery_Count']
+                 "British_Fleet_Damage_This_Tick", "British_Damage_Cumulative",
+                 'British_Ship_Count-destroyer', 'British_Ship_Count-battlecruiser',
+                 'British_Ship_Count-cruiser','British_Ship_Count-battleship',
+                 'German_Ship_Count', 'German_Fleet_Health', 'German_Gunnery_Count', 
+                 "German_Fleet_Damage_This_Tick", "German_Damage_Cumulative",
+                 'German_Ship_Count-destroyer', 'German_Ship_Count-battlecruiser',
+                 'German_Ship_Count-cruiser','German_Ship_Count-battleship',]
     
     for g_var in group_vars:
         for p_var in plot_vars:
@@ -50,7 +79,7 @@ def plot_over_time(group_var: str, plot_var: str, british_signal: str, x_axis: s
     for g_var in df_brit_avg[group_var].unique():
         group_data = df_brit_avg[(df_brit_avg[group_var] == g_var) & 
                                 (df_brit_avg['British_Signal'] == british_signal) &
-                                (df_brit_avg['Simulation_Tick'] < 35)]
+                                (df_brit_avg['Simulation_Tick'] <= SIM_END_TIC)]
         plt.plot(group_data['Simulation_Tick'], group_data["avg_plot_var"], label=f'{group_var} {g_var}')
 
     if len(x_axis) == 0: x_axis = 'Simulation Tick'
@@ -71,7 +100,7 @@ def plot_over_time(group_var: str, plot_var: str, british_signal: str, x_axis: s
 def plot_all_box_plots():
     group_vars = ["British_Delay", "German_Disengage_Delay"]
     british_signals = ["Disengage", "Engage"]
-    plot_vars = ['Ship_Count', 'Fleet_Health', 'Gunnery_Count']
+    plot_vars = ['Ship_Count', 'Fleet_Health', 'Gunnery_Count', "Damage_Cumulative"]
     
     for g_var in group_vars:
         for p_var in plot_vars:
@@ -114,7 +143,7 @@ def box_plot(group_var: str, plot_var: str, british_signal: str, x_axis: str = "
     if len(y_axis) == 0: y_axis = f'Final {plot_var.replace("_", " ").title()} Count'
     plt.xlabel(x_axis)
     plt.ylabel(y_axis)
-    plt.title(f'Distribution of {y_axis} vs. {x_axis}')
+    plt.title(f'{y_axis} vs. {x_axis} (British Signal = {british_signal})')
     plt.xticks(rotation=45)
     plt.ylim(np.floor(y_min * 0.9), np.floor(y_max * 1.1))
     plt.legend(title="Fleet", loc='upper left', bbox_to_anchor=(1, 1))
@@ -129,8 +158,8 @@ def box_plot(group_var: str, plot_var: str, british_signal: str, x_axis: str = "
 ####################################
 def plot_all_heat_maps():
     british_signals = ["Disengage", "Engage"]
-    plot_vars = ['British_Ship_Count', 'British_Fleet_Health', 'British_Gunnery_Count', 
-              'German_Ship_Count', 'German_Fleet_Health', 'German_Gunnery_Count']
+    plot_vars = ['British_Ship_Count', 'British_Fleet_Health', 'British_Gunnery_Count', "British_Damage_Cumulative",
+              'German_Ship_Count', 'German_Fleet_Health', 'German_Gunnery_Count', "German_Damage_Cumulative"]
     
     for p_var in plot_vars:
         for b_sig in british_signals:
@@ -143,7 +172,7 @@ def heat_map(plot_var: str, british_signal: str):
     # Create a pivot table for final British ship count based on British_Delay and German_Disengage
     
     final_data = df.groupby(['Run_id']).last()
-    var_min, var_max = get_min_max(var_name, "Both", data_frame=final_data)
+    var_min, var_max = get_min_max(var_name, fleet, data_frame=final_data)
 
     filtered_df = df[df['British_Signal'] == british_signal]
     final_data = filtered_df.groupby('Run_id').last()
@@ -157,7 +186,7 @@ def heat_map(plot_var: str, british_signal: str):
     # Plot a heatmap
     plt.figure(figsize=(10, 6))
     seaborn.heatmap(pivot_table, annot=True, cmap='inferno', fmt='.1f', cbar_kws={'label': 'Average British Ship Count'}, vmin=var_min, vmax=var_max)
-    plt.title(f'Average Final {plot_var.replace("_", " ").title()} vs. British Delay and German Disengage')
+    plt.title(f'Average Final {plot_var.replace("_", " ").title()} vs. British Delay and German Disengage (British Signal = {british_signal})')
     plt.xlabel('German Disengage')
     plt.ylabel('British Delay')
     plt.savefig(os.path.join(HEAT_MAPS, f"{plot_var}_heatmap-{british_signal}.jpg"), format="jpg")
@@ -172,13 +201,21 @@ def correlation_plot():
 
     # Select relevant columns for correlation analysis
     df['British_Signal_Numeric'] = df['British_Signal'].map({'Engage': 1, 'Disengage': 0})
-    correlation_data = df[['British_Delay', 'German_Disengage_Delay', 'British_Signal_Numeric', 'British_Ship_Count', 'German_Ship_Count']]
+    correlation_data = df[['British_Delay', 'German_Disengage_Delay', 'British_Signal_Numeric', 
+                           'British_Ship_Count',
+                           'British_Ship_Count-destroyer', 'British_Ship_Count-battlecruiser',
+                           'British_Ship_Count-cruiser','British_Ship_Count-battleship',
+                           'British_Fleet_Health', 'British_Fleet_Damage_This_Tick', 'British_Gunnery_Count',
+                           'German_Ship_Count',
+                           'German_Ship_Count-destroyer', 'German_Ship_Count-battlecruiser',
+                           'German_Ship_Count-cruiser','German_Ship_Count-battleship',
+                           'German_Fleet_Health', 'German_Fleet_Damage_This_Tick', 'German_Gunnery_Count']]
 
     # Calculate correlation matrix
     corr_matrix = correlation_data.corr()
 
     # Plot the correlation matrix
-    plt.figure(figsize=(8, 7))
+    plt.figure(figsize=(20, 17))
     seaborn.heatmap(corr_matrix, annot=True, cmap='YlGnBu', fmt='.2f', cbar_kws={'label': 'Correlation'})
     plt.title('Correlation Matrix for Input Parameters and Ship Counts')
     plt.xticks(rotation=45)
