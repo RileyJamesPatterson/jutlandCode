@@ -327,74 +327,74 @@ end
 
 ; update smoke diffusion and decay each tick
 to update-smoke
-  ;; Set parameters
-  let smoke_scale item 0 Smokeparameters                ; scaling for diffusion factor
-  let max_diffusion item 1 Smokeparameters           ; maximum diffusion factor
-  let min_diffusion item 2 Smokeparameters           ; base diffusion factor
+  if smoke-switch [
+    ;; Set parameters
+    let smoke_scale item 0 Smokeparameters                ; scaling for diffusion factor
+    let max_diffusion item 1 Smokeparameters           ; maximum diffusion factor
+    let min_diffusion item 2 Smokeparameters           ; base diffusion factor
 
-  let min_decay item 3 Smokeparameters               ; base decay factor
-  let decay_scale item 4 Smokeparameters              ; how quickly decay_factor approaches 1
-  let maxSmoke item 5 Smokeparameters                   ; visual thickness of the smoke. decreases with larger value
-  let windStrength item 6 Smokeparameters               ; Wind strength towards south east (range 1 ~ 5)
+    let min_decay item 3 Smokeparameters               ; base decay factor
+    let decay_scale item 4 Smokeparameters              ; how quickly decay_factor approaches 1
+    let maxSmoke item 5 Smokeparameters                   ; visual thickness of the smoke. decreases with larger value
+    let windStrength item 6 Smokeparameters               ; Wind strength towards south east (range 1 ~ 5)
 
-  ;; Compute diffusion factor
-  let avgSmoke mean [smoke] of patches
-  let diffusion_factor min_diffusion + ((avgSmoke / smoke_scale))
-  if diffusion_factor > max_diffusion [ set diffusion_factor max_diffusion ]
+    ;; Compute diffusion factor
+    let avgSmoke mean [smoke] of patches
+    let diffusion_factor min_diffusion + ((avgSmoke / smoke_scale))
+    if diffusion_factor > max_diffusion [ set diffusion_factor max_diffusion ]
 
-  ;; Diffusion towards SouthEast
-  ;; Reference:
-  ;; https://www.usni.org/magazines/proceedings/1940/january/effects-meteorological-conditions-tactical-operations-jutland#:~:text=The%20wind%2C%20at%20Jutland%2C%20was,was%20the%20more%20important%20factor.
-  ask patches [
-    if smoke > 0.05 [
-      let diffused smoke * diffusion_factor
-      set smoke smoke - diffused
-      let sx pxcor
-      let sy pycor
+    ;; Diffusion towards SouthEast
+    ;; Reference:
+    ;; https://www.usni.org/magazines/proceedings/1940/january/effects-meteorological-conditions-tactical-operations-jutland#:~:text=The%20wind%2C%20at%20Jutland%2C%20was,was%20the%20more%20important%20factor.
+    ask patches [
+      if smoke > 0.05 [
+        let diffused smoke * diffusion_factor
+        set smoke smoke - diffused
+        let sx pxcor
+        let sy pycor
 
-      ;; get neigbors within 1 patch distance
-      let nbrs sort (neighbors)
+        ;; get neigbors within 1 patch distance
+        let nbrs sort (neighbors)
 
 
-      ;; Weights for diffusion based on south east direction
-      if not empty? nbrs [
-        let weights []
-        foreach nbrs [ n ->
-          set weights lput (compute-weight n sx sy windStrength) weights
-        ]
+        ;; Weights for diffusion based on south east direction
+        if not empty? nbrs [
+          let weights []
+          foreach nbrs [ n ->
+            set weights lput (compute-weight n sx sy windStrength) weights
+          ]
 
-        ;; Distribute the diffused smoke proportionally.
-        let total_weight sum weights
-        if total_weight > 0 [
-          let index 0
-          foreach nbrs [
-            n ->
-            let w item index weights
-            ask n [ set smoke smoke + diffused * (w / total_weight) ]
-            set index index + 1
+          ;; Distribute the diffused smoke proportionally.
+          let total_weight sum weights
+          if total_weight > 0 [
+            let index 0
+            foreach nbrs [
+              n ->
+              let w item index weights
+              ask n [ set smoke smoke + diffused * (w / total_weight) ]
+              set index index + 1
+            ]
           ]
         ]
       ]
     ]
-  ]
     ask patches [
       ;; Decay and visual updates
       let decay_factor min_decay + ((1 - min_decay) * (smoke / (smoke + decay_scale)))
       set smoke smoke * decay_factor
-      if smoke < 0.05 [ set smoke 0 ]
-
-      ; Set visibility based on smoke
-      let visibility_reduction 100 - smoke / 10
-      set visibility max (list 0 (visibility_reduction))
-      set visibility min (list visibility 100)
-      ifelse smoke = 0 [
+      ifelse smoke < 0.05 [
+        set smoke 0
+        set visibility 100
         set pcolor blue
+
       ] [
+        let visibility_reduction 100 - smoke / 10
+        set visibility max list 0 (min list visibility_reduction 100)
         let frac min (list (smoke / maxSmoke) 1)
         set pcolor blend-color blue black frac
       ]
     ]
-
+  ]
 end
 ; ==========================================;
 ; ============   Accuracy  =================;
@@ -962,7 +962,7 @@ GermanDisengageSignalTick
 GermanDisengageSignalTick
 0
 10
-0.0
+7.0
 1
 1
 Tick
@@ -977,7 +977,7 @@ BritishDelay
 BritishDelay
 0
 15
-14.0
+15.0
 1
 1
 Tick
@@ -1074,7 +1074,7 @@ SWITCH
 639
 smoke-switch
 smoke-switch
-0
+1
 1
 -1000
 
