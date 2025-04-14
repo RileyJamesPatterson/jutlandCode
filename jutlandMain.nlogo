@@ -324,23 +324,8 @@ to move-turtleShips
     ]
 
     if britishSignal = "Disengage" [;   BritishSignal Set by User via chooser
-      ;define behaviour of british ships if signal is "Disengage"
-      ;let hostiles turtleShips with [fleet != "British"] ;get the set of things to evade
 
-     ; if any? hostiles [
         ask turtleShips with [fleet = "British"] [
-;          let closestHostile min-one-of hostiles [distance myself] ; finds closest hostile
-;          let hostilesDestination patch [xcor] of closestHostile [ycor] of closestHostile
-;          show hostilesDestination
-;          let hostileDistToDest getdistance closestHostile hostilesDestination
-;          if hostileDistToDest > distance hostilesDestination [ ;if ship is not between hositle and its detination
-;            set destinationX [destinationX] of closestHostile ;placeholder, NEED TO FIGURE OUT EVASION SUBTRACT HEADING? IF torpedo match heading if ship head away
-;            set destinationY [destinationY] of closestHostile
-;          ]
-;          if hostileDistToDest <= distance hostilesDestination [ ; if ship is between target and its destination
-;            set destinationX [0 - destinationX] of closestHostile ;placeholder, NEED TO FIGURE OUT EVASION SUBRTACT HEADING?
-;            set destinationY [0 - destinationY] of closestHostile
-;          ]
           set destinationX max-pxcor
           set destinationY ycor
         ]
@@ -474,8 +459,7 @@ to shoot-turtleShips
 end
 
 to fireTurrets [targetShip gunsInArc]
-
-  create-guntrack-to targetShip
+  if cosmetics = true [create-guntrack-to targetShip]
   ;determine expected number of hits. Fractional hits ok.
   let hitsOnTarget ( gunRateOfFire * twelveInchEquiv * gunsInArc * 0.02 )  ;PLACEHOLDER FOR GUNNERY MODEL 3% of shots fired at jutland hit. 1% penalty as placeholder for dusk and smoke
   ;add more complicated fromula based on hit distribution per "An analysis of the fighting". Some relevant variables are likely range and illumination/smoke
@@ -613,6 +597,11 @@ to set-cosmetics
   ask gunTracks [palette:set-alpha 50]
   ask torpTracks [
     set color white
+  if cosmetics = False[
+      ask links[
+      set hidden? True
+      ]
+    ]
   ]
 end
 
@@ -630,11 +619,7 @@ end
 to go
   while [FleetInContact or ticks < MINRUN]
   [
-    if cosmetics = False[
-      ask links[
-        set hidden? True
-      ]
-    ]
+
     ask gunTracks [die]
     ask turtleships [set damageTakenThisTick 0]
     move-turtleTorpedoes
@@ -734,7 +719,7 @@ BritishDelay
 BritishDelay
 0
 15
-3.0
+13.0
 1
 1
 Tick
@@ -748,7 +733,7 @@ CHOOSER
 BritishSignal
 BritishSignal
 "Disengage" "Engage"
-0
+1
 
 PLOT
 6
