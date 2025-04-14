@@ -507,7 +507,6 @@ to damage-turtleShips
     ;reduce hullpoints and reset DamageTakenThisTick
     set hullPoints ( [hullPoints] of self - [damageTakenThisTick] of self  )
     set lostHp ([lostHp] of self + [damageTakenThisTick] of self )
-    set damageTakenThisTick 0
     if hullPoints <= 0 [
       if debug [show word [name] of self " has been taken out of action by cumulative damage"]
       set sunk 1
@@ -1210,14 +1209,22 @@ NetLogo 6.4.0
   <experiment name="Monte Carlo" repetitions="10" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="150"/>
+    <timeLimit steps="70"/>
     <exitCondition>"FleetInContact" = FALSE</exitCondition>
     <metric>time:show SimTime "HH:mm:ss"</metric>
     <metric>count turtleShips with [fleet = "British"]</metric>
+    <metric>count turtleShips with [fleet = "British" and shipType ="destroyer"]</metric>
+    <metric>count turtleShips with [fleet = "British" and shipType ="battlecruiser"]</metric>
+    <metric>count turtleShips with [fleet = "British" and shipType ="cruiser"]</metric>
+    <metric>count turtleShips with [fleet = "British" and shipType ="battleship"]</metric>
     <metric>sum [hullPoints] of turtleShips with [fleet = "British"]</metric>
     <metric>sum [damageTakenThisTick] of turtleShips with [fleet = "British"]</metric>
     <metric>sum [bowGuns + sternGuns + portGuns + starbGuns] of turtleShips with [fleet = "British"]</metric>
     <metric>count turtleShips with [fleet = "German"]</metric>
+    <metric>count turtleShips with [fleet = "German" and shipType ="destroyer"]</metric>
+    <metric>count turtleShips with [fleet = "German" and shipType ="battlecruiser"]</metric>
+    <metric>count turtleShips with [fleet = "German" and shipType ="cruiser"]</metric>
+    <metric>count turtleShips with [fleet = "German" and shipType ="battleship"]</metric>
     <metric>sum [hullPoints] of turtleShips with [fleet = "German"]</metric>
     <metric>sum [damageTakenThisTick] of turtleShips with [fleet = "German"]</metric>
     <metric>sum [bowGuns + sternGuns + portGuns + starbGuns] of turtleShips with [fleet = "German"]</metric>
