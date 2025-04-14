@@ -630,12 +630,13 @@ end
 to go
   while [FleetInContact or ticks < MINRUN]
   [
-    ask gunTracks [die]
     if cosmetics = False[
       ask links[
         set hidden? True
       ]
     ]
+    ask gunTracks [die]
+    ask turtleships [set damageTakenThisTick 0]
     move-turtleTorpedoes
     move-turtleShips
     launch-turtleTorpedoes
@@ -733,7 +734,7 @@ BritishDelay
 BritishDelay
 0
 15
-15.0
+3.0
 1
 1
 Tick
@@ -747,7 +748,7 @@ CHOOSER
 BritishSignal
 BritishSignal
 "Disengage" "Engage"
-1
+0
 
 PLOT
 6
@@ -808,7 +809,7 @@ SWITCH
 597
 cosmetics
 cosmetics
-1
+0
 1
 -1000
 
