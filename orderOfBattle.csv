@@ -1,34 +1,34 @@
 shipId,xCorStart,yCorStart,headingStart,name,fleet,shipBehaviour,TwelveInchEquiv,destinationX,destinationY,maxTurn,speed,gunCaliber,maxGunRange,gunRateOfFire,bowGuns,sternGuns,portGuns,starbGuns,torpedoTubes ,length,beam,hullPoints,shipType,shipClass
 M4,26,34,180,Agincourt,British,Battleship,1,40,-20,20,2,12,90,1,6,8,0,0,0,204,27,20,battleship,Agincourt
-Cali5,60,2,180,Royalist,British,Battleship,0.11,70,-40,20,2,6,90,4,1,1,0,0,0,125,12,3,cruiser,Arethusa Light Cruiser
-Inc1,66,10,175,Inconstant,British,Battleship,0.11,80,-40,20,2,6,90,4,1,1,0,0,0,125,12,6,cruiser,Arethusa Light Cruiser
-Inc2,66,12,175,Phaeton,British,Battleship,0.11,80,-40,20,2,6,90,4,1,1,0,0,0,125,12,6,cruiser,Arethusa Light Cruiser
-Inc3,65,15,175,Galatea,British,Battleship,0.11,80,-40,20,2,6,90,4,1,1,0,0,0,125,12,6,cruiser,Arethusa Light Cruiser
+Cali5,60,2,180,Royalist,British,Battleship,0.11,70,-40,20,3,6,90,4,1,1,0,0,0,125,12,3,cruiser,Arethusa Light Cruiser
+Inc1,66,10,175,Inconstant,British,Battleship,0.11,80,-40,20,3,6,90,4,1,1,0,0,0,125,12,6,cruiser,Arethusa Light Cruiser
+Inc2,66,12,175,Phaeton,British,Battleship,0.11,80,-40,20,3,6,90,4,1,1,0,0,0,125,12,6,cruiser,Arethusa Light Cruiser
+Inc3,65,15,175,Galatea,British,Battleship,0.11,80,-40,20,3,6,90,4,1,1,0,0,0,125,12,6,cruiser,Arethusa Light Cruiser
 Ben2,38,22,180,Bellerophon,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,160,25,20,battleship,Bellerophan
 Ben3,41,23,180,Temeraire,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,160,25,20,battleship,Bellerophan
 Iron3,47,15,180,Superb,British,Battleship,1,53,-20,20,2,12,90,1.33,2,4,2,2,0,160,25,20,battleship,Bellerophan
-Cali1,60,-5,180,Calliope,British,Battleship,0.11,80,-40,20,2,6,90,4,1,1,0,0,0,136,12,6,cruiser,C Class Light Cruiser
-Cali2,60,-3,180,Constance,British,Battleship,0.11,80,-40,20,2,6,90,4,1,1,1,1,0,137,17,6,cruiser,C Class Light Cruiser
-Cali3,60,-2,180,Comus,British,Battleship,0.11,80,-40,20,2,6,90,4,1,1,1,1,0,136,12,6,cruiser,C Class Light Cruiser
-Cali4,60,0,180,Caroline,British,Battleship,0.11,80,-40,20,2,6,90,4,1,1,0,0,0,137,13,6,cruiser,C Class Light Cruiser
-B11float1,65,-8,270,Castor,British,Destroyer,0.11,80,-40,20,2,6,90,4,1,1,1,1,4,135,13,6,cruiser,C Class Light Cruiser
+Cali1,60,-5,180,Calliope,British,Battleship,0.11,80,-40,20,3,6,90,4,1,1,0,0,0,136,12,6,cruiser,C Class Light Cruiser
+Cali2,60,-3,180,Constance,British,Battleship,0.11,80,-40,20,3,6,90,4,1,1,1,1,0,137,17,6,cruiser,C Class Light Cruiser
+Cali3,60,-2,180,Comus,British,Battleship,0.11,80,-40,20,3,6,90,4,1,1,1,1,0,136,12,6,cruiser,C Class Light Cruiser
+Cali4,60,0,180,Caroline,British,Battleship,0.11,80,-40,20,3,6,90,4,1,1,0,0,0,137,13,6,cruiser,C Class Light Cruiser
+B11float1,65,-8,270,Castor,British,Destroyer,0.11,80,-40,20,3,6,90,4,1,1,1,1,4,135,13,6,cruiser,C Class Light Cruiser
 Iron4,47,17,180,Canada,British,Battleship,1.86,53,-20,20,2,14,90,1,6,4,0,0,0,201,28,20,battleship,Canada
 M3,26,32,180,Hercules,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,166,26,20,battleship,Colossus
 C1,34,19,180,Colossus,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,166,26,20,battleship,Colossus
-Mino2,80,5,180,Hampshire,British,Battleship,0.23,75,-30,20,2,7.5,90,3,1,1,1,1,0,144,21,6,cruiser,Devonshire
-Mino5,80,14,180,Duke Of Edinburgh,British,Battleship,0.44,75,-30,20,2,9.2,90,2,1,1,2,2,0,154,22,6,cruiser,Duke of Edinburgh
+Mino2,80,5,180,Hampshire,British,Battleship,0.23,75,-30,20,3,7.5,90,3,1,1,1,1,0,144,21,6,cruiser,Devonshire
+Mino5,80,14,180,Duke Of Edinburgh,British,Battleship,0.44,75,-30,20,3,9.2,90,2,1,1,2,2,0,154,22,6,cruiser,Duke of Edinburgh
 kg4,62,12,180,Erin,British,Battleship,2.6,68,-30,20,2,13.5,90,1.16,4,6,0,0,0,170,28,20,battleship,Erin
-lion4,77,-6,180,New Zealand ,British,Battleship,1,70,-40,20,2,12,90,1,2,2,2,2,0,179,24,12,battlecruiser,Indefatigable
-lion5,78,-4,180,inflexible,British,Battleship,1,70,-40,20,2,12,90,1,2,2,2,2,0,161,25,12,battlecruiser,Invincible
-lion6,79,-2,180,indomitable,British,Battleship,1,70,-40,20,2,12,90,1,2,2,2,2,0,161,25,12,battlecruiser,Invincible
+lion4,77,-6,180,New Zealand ,British,Battleship,1,70,-40,20,3,12,90,1,2,2,2,2,0,179,24,12,battlecruiser,Indefatigable
+lion5,78,-4,180,inflexible,British,Battleship,1,70,-40,20,3,12,90,1,2,2,2,2,0,161,25,12,battlecruiser,Invincible
+lion6,79,-2,180,indomitable,British,Battleship,1,70,-40,20,3,12,90,1,2,2,2,2,0,161,25,12,battlecruiser,Invincible
 M1,26,29,180,Marlborough,British,Battleship,2.6,40,-20,20,2,13.5,90,1.16,6,4,0,0,0,189,27,20,battleship,Iron Duke
 Ben1,39,20,180,Benbow,British,Battleship,2.6,40,-20,20,2,13.5,90,1.16,6,4,0,0,0,189,27,20,battleship,Iron Duke
 Iron1,47,13,180,Iron Duke,British,Battleship,2.6,53,-20,20,2,13.5,90,1.16,6,4,0,0,0,189,27,20,battleship,Iron Duke
 Kg1,63,6,180,King George V,British,Battleship,1.65,68,-30,20,2,13.5,90,1.33,4,6,0,0,0,182,27,20,battleship,King George V
 kg2,63,8,180,Ajax,British,Battleship,1.65,68,-30,20,2,13.5,90,1.33,4,6,0,0,0,182,27,20,battleship,King George V
 kg3,62,10,180,Centurion,British,Battleship,1.65,68,-30,20,2,13.5,90,1.33,4,6,0,0,0,182,27,20,battleship,King George V
-lion1,76,-12,180,Lion,British,Battleship,1.65,70,-40,20,2,13.5,90,1.33,4,4,0,0,0,213,27,12,battlecruiser,Lion
-lion2,76,-10,180,Princess Royal,British,Battleship,1.65,70,-40,20,2,13.5,90,1.33,4,4,0,0,0,213,27,12,battlecruiser,Lion
+lion1,76,-12,180,Lion,British,Battleship,1.65,70,-40,20,3,13.5,90,1.33,4,4,0,0,0,213,27,12,battlecruiser,Lion
+lion2,76,-10,180,Princess Royal,British,Battleship,1.65,70,-40,20,3,13.5,90,1.33,4,4,0,0,0,213,27,12,battlecruiser,Lion
 B11float2,65,-7,270,Ossory,British,Destroyer,0,-60,-10,35,3,0,50,0,0,0,0,0,2,70,25,3,destroyer,M Class Destroyer
 B11float3,65,-6,270,Martial,British,Destroyer,0,-60,-10,35,3,0,50,0,0,0,0,0,2,70,25,3,destroyer,M Class Destroyer
 B11float4,65,-5,270,Magic,British,Destroyer,0,-60,-10,35,3,0,50,0,0,0,0,0,2,70,25,3,destroyer,M Class Destroyer
@@ -43,8 +43,8 @@ B11float12,68,-7,270,Manners,British,Destroyer,0,-60,-10,35,3,0,50,0,0,0,0,0,2,7
 B11float13,68,-6,270,Moon,British,Destroyer,0,-60,-10,35,3,0,50,0,0,0,0,0,2,70,25,3,destroyer,M Class Destroyer
 B11float14,68,-5,270,Mounsey,British,Destroyer,0,-60,-10,35,3,0,50,0,0,0,0,0,2,70,25,3,destroyer,M Class Destroyer
 B11float15,68,-8,270,Morning star,British,Destroyer,0,-60,-10,35,3,0,50,0,0,0,0,0,2,70,25,3,destroyer,M Class Destroyer
-Mino1,80,3,180,Minotaur,British,Battleship,0.45,75,-30,20,2,9.2,90,2.6,2,2,0,0,0,149,22,6,cruiser,Minotaur
-Mino3,80,8,180,Shannon,British,Battleship,0.45,75,-30,20,2,9.2,90,2.6,2,2,0,0,0,149,22,6,cruiser,Minotaur
+Mino1,80,3,180,Minotaur,British,Battleship,0.45,75,-30,20,3,9.2,90,2.6,2,2,0,0,0,149,22,6,cruiser,Minotaur
+Mino3,80,8,180,Shannon,British,Battleship,0.45,75,-30,20,3,9.2,90,2.6,2,2,0,0,0,149,22,6,cruiser,Minotaur
 C4,33,23,180,Neptune,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,166,25,20,battleship,Neptune
 Or1,56,10,180,Orion,British,Battleship,1.65,60,-20,20,2,13.5,90,1.33,4,6,0,0,0,177,27,20,battleship,Orion
 Or2,56,12,180,Monarch,British,Battleship,1.65,60,-20,20,2,13.5,90,1.33,4,6,0,0,0,177,27,20,battleship,Orion
@@ -55,24 +55,24 @@ Bar2,28,39,180,Valiant,British,Battleship,2.28,40,-20,20,2,15,90,1.33,4,4,0,0,0,
 Bar3,28,41,180,Malaya,British,Battleship,2.28,40,-20,20,2,15,90,1.33,4,4,0,0,0,196,27,20,battleship,Queen Elizabeth 
 M2,26,30,180,Revenge,British,Battleship,2.28,40,-20,20,2,15,90,1.33,4,4,0,0,0,189,27,20,battleship,Revenge
 Iron2,47,14,180,Royal Oak,British,Battleship,2.28,40,-20,20,2,15,90,1.33,4,4,0,0,0,189,27,20,battleship,Revenge
-Fall5,72,-14,225,Engadine,British,Battleship,1,40,-50,20,2,0,90,0,0,0,0,0,0,98,12,6,cruiser,Seaplane tender
+Fall5,72,-14,225,Engadine,British,Battleship,1,40,-50,20,3,0,90,0,0,0,0,0,0,98,12,6,cruiser,Seaplane tender
 C2,34,21,180,Collingwood,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,battleship,St Vincent
 C3,33,22,180,St.Vincent,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,battleship,St Vincent
 Ben4,40,25,180,Vanguard,British,Battleship,1,40,-20,20,2,12,90,1.33,2,4,2,2,0,161,25,20,battleship,St Vincent
-lion3,77,-8,180,Tiger,British,Battleship,1.64,70,-40,20,2,13.5,90,1.33,4,4,0,0,0,214,28,12,battlecruiser,Tiger
-Fall1,68,-18,225,Falmouth,British,Battleship,0.12,40,-50,20,2,6,90,4,2,2,2,2,0,131,138,6,cruiser,Town Class
-Fall2,69,-17,225,Yarmouth,British,Battleship,0.12,40,-50,20,2,6,90,4,2,2,2,2,0,131,138,6,cruiser,Town Class
-Fall3,70,-16,225,Birkenhead,British,Battleship,0.12,40,-50,20,2,6,90,4,2,2,2,2,0,131,138,6,cruiser,Town Class
-Fall4,71,-15,225,Gloucester ,British,Battleship,0.12,40,-50,20,2,6,90,4,2,2,2,2,0,131,138,6,cruiser,Town Class
-Mino4,80,11,180,Cochrane,British,Battleship,0.45,75,-30,20,2,9.2,90,2.6,1,1,2,2,0,143,22,6,cruiser,Warrior
-2ndFloat1,5,-15,40,SMS B98,German,Destroyer,1,40,30,35,3,0,50,0,0,0,0,0,2,98,9,3,destroyer,B97
-2ndFloat4,0,-15,40,SMS B112,German,Destroyer,1,40,30,35,3,0,50,0,0,0,0,0,2,98,9,3,destroyer,B97
-2ndFloat5,5,-16,40,SMS B97,German,Destroyer,1,40,30,35,3,0,50,0,0,0,0,0,2,98,9,3,destroyer,B97
-2ndFloat6,3,-16,40,SMS B109,German,Destroyer,1,40,30,35,3,0,50,0,0,0,0,0,2,98,9,3,destroyer,B97
-2ndFloat7,1,-16,40,SMS B110,German,Destroyer,1,40,30,35,3,0,50,0,0,0,0,0,2,98,9,3,destroyer,B97
-2ndFloat8,0,-16,40,SMS B111,German,Destroyer,1,40,30,35,3,0,50,0,0,0,0,0,2,98,9,3,destroyer,B97
-Bc4,5,4,40,Derfflinger,German,Battleship,1,80,10,20,2,12,90,1.66,4,4,0,0,0,210,29,12,battlecruiser,Derfflinger
-Bc4,-14,-34,40,Lutzow,German,Battleship,1,80,10,20,2,12,90,1.66,4,4,0,0,0,210,29,12,battlecruiser,Derfflinger
+lion3,77,-8,180,Tiger,British,Battleship,1.64,70,-40,20,3,13.5,90,1.33,4,4,0,0,0,214,28,12,battlecruiser,Tiger
+Fall1,68,-18,225,Falmouth,British,Battleship,0.12,40,-50,20,3,6,90,4,2,2,2,2,0,131,15,6,cruiser,Town Class
+Fall2,69,-17,225,Yarmouth,British,Battleship,0.12,40,-50,20,3,6,90,4,2,2,2,2,0,131,15,6,cruiser,Town Class
+Fall3,70,-16,225,Birkenhead,British,Battleship,0.12,40,-50,20,3,6,90,4,2,2,2,2,0,131,15,6,cruiser,Town Class
+Fall4,71,-15,225,Gloucester ,British,Battleship,0.12,40,-50,20,3,6,90,4,2,2,2,2,0,131,15,6,cruiser,Town Class
+Mino4,80,11,180,Cochrane,British,Battleship,0.45,75,-30,20,3,9.2,90,2.6,1,1,2,2,0,143,22,6,cruiser,Warrior
+2ndFloat1,5,-15,40,SMS B98,German,Destroyer,1,40,30,35,3,0,50,0,0,0,0,0,6,98,9,3,destroyer,B97
+2ndFloat4,0,-15,40,SMS B112,German,Destroyer,1,40,30,35,3,0,50,0,0,0,0,0,6,98,9,3,destroyer,B97
+2ndFloat5,5,-16,40,SMS B97,German,Destroyer,1,40,30,35,3,0,50,0,0,0,0,0,6,98,9,3,destroyer,B97
+2ndFloat6,3,-16,40,SMS B109,German,Destroyer,1,40,30,35,3,0,50,0,0,0,0,0,6,98,9,3,destroyer,B97
+2ndFloat7,1,-16,40,SMS B110,German,Destroyer,1,40,30,35,3,0,50,0,0,0,0,0,6,98,9,3,destroyer,B97
+2ndFloat8,0,-16,40,SMS B111,German,Destroyer,1,40,30,35,3,0,50,0,0,0,0,0,6,98,9,3,destroyer,B97
+Bc4,5,4,40,Derfflinger,German,Battleship,1,80,10,20,3,12,90,1.66,4,4,0,0,0,210,29,12,battlecruiser,Derfflinger
+Bc4,-14,-34,40,Lutzow,German,Battleship,1,80,10,20,3,12,90,1.66,4,4,0,0,0,210,29,12,battlecruiser,Derfflinger
 H1,-64,-17,40,Hannover,German,Battleship,0.62,80,10,20,2,11,90,1.33,2,2,0,0,0,127,22,20,battleship,Deutschland
 H2,-62,-18,40,Schlesien,German,Battleship,0.62,80,10,20,2,11,90,1.33,2,2,0,0,0,127,22,20,battleship,Deutschland
 H3,-59,-19,40,Schleswig-Holstein,German,Battleship,0.62,80,10,20,2,11,90,1.33,2,2,0,0,0,127,22,20,battleship,Deutschland
@@ -95,16 +95,16 @@ P9,-16,0,40,Markgraf,German,Battleship,1,80,10,20,2,12,90,2,4,6,0,0,0,175,29,20,
 P10,-14,0,40,Kronprinz,German,Battleship,1,80,10,20,2,12,90,2,4,6,0,0,0,175,29,20,battleship,Konig
 P11,-12,0,40,Grosser Kurfurst,German,Battleship,1,80,10,20,2,12,90,2,4,6,0,0,0,175,29,20,battleship,Konig
 K1,-10,0,40,Konig,German,Battleship,1,80,10,20,2,12,90,2,4,6,0,0,0,175,29,20,battleship,Konig
-Bc2,5,0,40,Moltke,German,Battleship,0.62,80,10,20,2,11,90,2,3,2,0,0,0,186,29,12,battlecruiser,Moltke
+Bc2,5,0,40,Moltke,German,Battleship,0.62,80,10,20,3,11,90,2,3,2,0,0,0,186,29,12,battlecruiser,Moltke
 W1,-50,-10,40,WestFalen,German,Battleship,0.62,80,10,20,2,11,90,2,2,2,2,2,0,146,26,20,battleship,Nassau
 W2,-46,-9,40,Nassau,German,Battleship,0.62,80,10,20,2,11,90,2,2,2,4,4,0,146,26,20,battleship,Nassau
 W3,-42,-7,40,Rheinland,German,Battleship,0.62,80,10,20,2,11,90,2,2,2,4,4,0,146,26,20,battleship,Nassau
 P1,-38,-5,40,Posen,German,Battleship,0.62,80,10,20,2,11,90,2,2,2,4,4,0,146,26,20,battleship,Nassau
-F2,-9,-40,40,Elbing,German,Battleship,0.12,80,10,20,2,6,90,4,4,4,0,0,0,135,14,6,cruiser,Pillau
-F3,-10,-41,40,Pillau,German,Battleship,0.12,80,10,20,2,6,90,4,4,4,0,0,0,135,14,6,cruiser,Pillau
-R,5,-17,40,Regensburg ,German,Destroyer,0.07,80,10,20,2,4,90,22.5,2,4,4,2,6,142,25,6,cruiser,Regensburg 
+F2,-9,-40,40,Elbing,German,Battleship,0.12,80,10,20,3,6,90,4,4,4,0,0,0,135,14,6,cruiser,Pillau
+F3,-10,-41,40,Pillau,German,Battleship,0.12,80,10,20,3,6,90,4,4,4,0,0,0,135,14,6,cruiser,Pillau
+R,5,-17,40,Regensburg ,German,Destroyer,0.07,80,10,20,3,4,90,22.5,2,4,4,2,6,142,25,6,cruiser,Regensburg 
 7thFloat9,5,-21,40,SMSV189,German,Destroyer,0,40,30,35,3,0,50,0,0,0,0,0,3,70,8,3,destroyer,S138
-Bc3,5,2,40,Seydlitz,German,Battleship,0.62,80,10,20,2,11,90,2,2,4,2,2,0,200,29,12,battlecruiser,Seydlitz
+Bc3,5,2,40,Seydlitz,German,Battleship,0.62,80,10,20,3,11,90,2,2,4,2,2,0,200,29,12,battlecruiser,Seydlitz
 7thFloat1,5,-19,40,SMS S24,German,Destroyer,1,40,30,35,3,0,50,15.6,0,0,0,0,4,71,7,3,destroyer,V1
 7thFloat2,3,-19,40,SMS S15,German,Destroyer,1,40,30,35,3,0,50,15.6,0,0,0,0,4,71,7,3,destroyer,V1
 7thFloat3,1,-19,40,SMS S17,German,Destroyer,1,40,30,35,3,0,50,15.6,0,0,0,0,4,71,7,3,destroyer,V1
@@ -124,6 +124,6 @@ Bc3,5,2,40,Seydlitz,German,Battleship,0.62,80,10,20,2,11,90,2,2,4,2,2,0,200,29,1
 9thFloat9,-1,-10,40,SMS S33,German,Destroyer,1,40,30,35,3,0,50,15.6,0,0,0,0,6,84,8,3,destroyer,V25
 9thFloat10,3,-10,40,SMS S29,German,Destroyer,1,40,30,35,3,0,50,15.6,0,0,0,0,6,84,8,3,destroyer,V25
 9thFloat11,-1,-9,40,SMS S35,German,Destroyer,1,40,30,35,3,0,50,15.6,0,0,0,0,6,84,8,3,destroyer,V25
-Bc1,5,-2,40,Von der Tann,German,Battleship,0.78,80,10,20,2,11,90,2,2,2,2,2,0,171,26,12,battlecruiser,Von der Tann
-W,-6,29,40,Wiesbaden,German,Battleship,0.12,80,10,20,2,6,90,4,4,4,0,0,0,145,14,6,cruiser,Wiesbaden
-F1,-8,-39,40,Frankfurt,German,Battleship,0.12,80,10,20,2,6,90,4,4,4,0,0,0,145,14,6,cruiser,Wiesbaden
+Bc1,5,-2,40,Von der Tann,German,Battleship,0.78,80,10,20,3,11,90,2,2,2,2,2,0,171,26,12,battlecruiser,Von der Tann
+W,-6,29,40,Wiesbaden,German,Battleship,0.12,80,10,20,3,6,90,4,4,4,0,0,0,145,14,6,cruiser,Wiesbaden
+F1,-8,-39,40,Frankfurt,German,Battleship,0.12,80,10,20,3,6,90,4,4,4,0,0,0,145,14,6,cruiser,Wiesbaden

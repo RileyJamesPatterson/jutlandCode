@@ -22,6 +22,7 @@ globals [
   VisibilityReductionStep; calculated amount per tick that Visible range (in patches) descreases between sunset and naval twilight
   CurrentBrightness ; global variable to hold the brighness of patches
   BrightnessReductionStep; calculated amount per tick that shade of patches descreases between sunset and naval twilight
+  MINRUN; duration in ticks of minimum run
 ]
 
 ; ### Declare Agent Breeds ###
@@ -75,18 +76,19 @@ turtleTorpedoes-own [
 to setup-constants
   set TORPEDOSPEED 3
   set TORPEDOLIFETIME 19
-  set TORPEDODAMAGE 10
-  Set TORPEDOATTACKRANGE 39
+  set TORPEDODAMAGE 9
+  Set TORPEDOATTACKRANGE 40
   Set FleetInContact TRUE
   set SimTime time:anchor-to-ticks (time:create "1916/05/31 20:15") 40 "second"
   set SunSet time:create "1916/05/31 20:43" ; Starts getting dark time. 20:43 is 30 min before TrueSunset of 21:13 based on sun calc and latitude
-  set NavalTwilight time:create "1916/05/31 21:23"; Finishes getting dark time. Much earlier than true naval twilight, which doesnt actually occur that far north in may
+  set NavalTwilight time:create "1916/05/31 21:13"; Finishes getting dark time. Much earlier than true naval twilight, which doesnt actually occur that far north in may
   set MaxVisibility 80 ;Best guess based off 20:05 max range of german battlecruiser salve Tarrant p153
   set TicksUntilDarkness ( time:difference-between (Sunset) (NavalTwilight) "seconds" / 40 ) ;number of seconds between sunset and darkness / sec per tick
   set VisibilityReductionStep (MaxVisibility / ticksUntilDarkness)
+  set MINRUN 30
 
 
-  resize-world -160 160 -150 45 ;sets patch size of the world.
+  resize-world -180 160 -150 45 ;sets patch size of the world.
 
 end
 
@@ -263,9 +265,15 @@ to move-turtleShips
     if debug [print word  ticks ":German Admiral Scheer Signals for withdrawal by individual movement"]
 
     ask turtleShips with [fleet = "German" and shipBehaviour = "Battleship"][
-      set destinationX min-pxcor + 45
+      set destinationX min-pxcor + 45 ;offset causes ships to turn to port per historical example
       set destinationY min-pycor
 
+    ]
+  ]
+  if ticks > GermanDisengageSignalTick + 10 [
+    ask turtleShips with [fleet = "German" and shipBehaviour = "Battleship"][
+      set destinationX min-pxcor
+      set destinationY min-pycor
     ]
   ]
   ;German destroyers either a)close with closest taget and fire torepedoes or b) withdraw if no torpedoes
@@ -277,7 +285,7 @@ to move-turtleShips
         ;if Destroyers have torpedoes, close with nearest battleship
 
         ; finds closest hostile
-        let possibleTargets turtleShips with [fleet = "British" and shipBehaviour = "Battleship"]
+        let possibleTargets turtleShips with [fleet = "British" and shipType = "Battleship"]
 
 
         let closestTarget min-one-of possibleTargets [distance myself]
@@ -351,8 +359,21 @@ to move-turtleShips
     if (desiredHeadingChange < maxturn) and (desiredHeadingChange > 0 - maxturn )[
       right desiredHeadingChange]
 
-    ;move ships along their modified heading
-    forward speed
+    ;try to move ships along their modified heading. If desired patch is occupied, slow by 1 and try again
+    let checkSpeed speed
+    let desiredOccupied True
+    let checkedSpeed 0
+    carefully [
+      while [(desiredOccupied = True) and (checkSpeed > 0)] [
+        if (count other turtleShips-on patch-ahead checkSpeed = 0 )[
+          set desiredOccupied False
+          set checkedSpeed checkSpeed
+        ]
+        set checkSpeed checkSpeed - .3
+      ]
+    ]
+    [ ]
+    forward checkedSpeed
   ]
 end
 
@@ -456,7 +477,7 @@ to fireTurrets [targetShip gunsInArc]
 
   create-guntrack-to targetShip
   ;determine expected number of hits. Fractional hits ok.
-  let hitsOnTarget ( gunRateOfFire * twelveInchEquiv * gunsInArc * 0.03 )  ;PLACEHOLDER FOR GUNNERY MODEL 3% of shots fired at jutland hit
+  let hitsOnTarget ( gunRateOfFire * twelveInchEquiv * gunsInArc * 0.02 )  ;PLACEHOLDER FOR GUNNERY MODEL 3% of shots fired at jutland hit. 1% penalty as placeholder for dusk and smoke
   ;add more complicated fromula based on hit distribution per "An analysis of the fighting". Some relevant variables are likely range and illumination/smoke
 
   ask patch-here [set pcolor grey] ;placeholder for now, creates patch of grey. could generate smoke once implemented
@@ -506,8 +527,9 @@ to sink-TurtleShip
   set shape "fire"
   if fleet = "British"[ set color red ]
   if fleet = "German"[ set color lime ]
-
-  stamp
+  if cosmetics = True[
+    stamp
+  ]
   die
 end
 
@@ -565,7 +587,7 @@ to reduce-visibility
     ;calculated globally to avoid world width * world length redundant calcs.
 
     ;decrement CurrentBrightness
-    set CurrentBrightness CurrentBrightness - BrightnessReductionStep
+    set CurrentBrightness max (list 0 (CurrentBrightness - BrightnessReductionStep))
 
     ask patches[
       palette:set-brightness CurrentBrightness
@@ -589,11 +611,9 @@ end
 
 to set-cosmetics
   ;utility process run at end of of on-tick loop to alter any cosmetic values before being displayed to user.
-  ask gunTracks [palette:set-alpha 60]
+  ask gunTracks [palette:set-alpha 50]
   ask torpTracks [
     set color white
-    ;set pen-size .5
-              ;pen-down
   ]
 end
 
@@ -609,9 +629,14 @@ to setup
 end
 
 to go
-  while [FleetInContact or ticks < 35]
+  while [FleetInContact or ticks < MINRUN]
   [
     ask gunTracks [die]
+    if cosmetics = False[
+      ask links[
+        set hidden? True
+      ]
+    ]
     move-turtleTorpedoes
     move-turtleShips
     launch-turtleTorpedoes
@@ -627,7 +652,7 @@ end
 GRAPHICS-WINDOW
 210
 10
-1502
+1582
 803
 -1
 -1
@@ -641,7 +666,7 @@ GRAPHICS-WINDOW
 0
 0
 1
--160
+-180
 160
 -150
 45
@@ -694,16 +719,16 @@ GermanDisengageSignalTick
 GermanDisengageSignalTick
 0
 10
-4.0
+0.0
 1
 1
 Tick
 HORIZONTAL
 
 SLIDER
-15
+1
 104
-187
+205
 137
 BritishDelay
 BritishDelay
@@ -716,10 +741,10 @@ Tick
 HORIZONTAL
 
 CHOOSER
-30
-155
-168
-200
+33
+147
+171
+192
 BritishSignal
 BritishSignal
 "Disengage" "Engage"
@@ -727,10 +752,10 @@ BritishSignal
 
 PLOT
 6
-331
+204
 206
-481
-Count of Fleet Hull Points 
+354
+Fleet Hull Points 
 time
 totals
 0.0
@@ -745,10 +770,10 @@ PENS
 "German" 1.0 0 -16777216 true "" "plot sum [hullPoints] of turtleShips with [fleet = \"German\"]"
 
 MONITOR
-32
-215
-164
-260
+8
+366
+204
+411
 SimTime
 time:show SimTime \"yyyy-MM-dd HH:mm:ss\"
 2
@@ -756,10 +781,10 @@ time:show SimTime \"yyyy-MM-dd HH:mm:ss\"
 11
 
 MONITOR
-41
-272
-154
-317
+8
+417
+204
+462
 Fleets In Contact
 FleetInContact
 17
@@ -767,15 +792,37 @@ FleetInContact
 11
 
 SWITCH
-29
-495
-169
-528
+37
+523
+170
+556
 debug
 debug
 1
 1
 -1000
+
+SWITCH
+38
+564
+171
+597
+cosmetics
+cosmetics
+1
+1
+-1000
+
+MONITOR
+7
+468
+203
+513
+Visibility (Meters)
+MaxVisibility * 200
+0
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
