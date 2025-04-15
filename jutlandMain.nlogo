@@ -79,10 +79,10 @@ to setup-constants
   set TORPEDODAMAGE 9
   Set TORPEDOATTACKRANGE 40
   Set FleetInContact TRUE
-  set SimTime time:anchor-to-ticks (time:create "1916/05/31 20:15") 40 "second"
-  set SunSet time:create "1916/05/31 20:43" ; Starts getting dark time. 20:43 is 30 min before TrueSunset of 21:13 based on sun calc and latitude
-  set NavalTwilight time:create "1916/05/31 21:13"; Finishes getting dark time. Much earlier than true naval twilight, which doesnt actually occur that far north in may
-  set MaxVisibility 80 ;Best guess based off 20:05 max range of german battlecruiser salve Tarrant p153
+  set SimTime time:anchor-to-ticks (time:create "1916/05/31 19:15") 40 "second"
+  set SunSet time:create "1916/05/31 19:43" ; Starts getting dark time.
+  set NavalTwilight time:create "1916/05/31 20:13"; Finishes getting dark time. Much earlier than true naval twilight, which doesnt actually occur that far north in may
+  set MaxVisibility 80 ;Best guess based off 20:05 (19:05 local) max range of german battlecruiser salvo Tarrant p153
   set TicksUntilDarkness ( time:difference-between (Sunset) (NavalTwilight) "seconds" / 40 ) ;number of seconds between sunset and darkness / sec per tick
   set VisibilityReductionStep (MaxVisibility / ticksUntilDarkness)
   set MINRUN 30
