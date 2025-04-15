@@ -617,9 +617,7 @@ to setup
 end
 
 to go
-  while [FleetInContact or ticks < MINRUN]
-  [
-
+  if FleetInContact or ticks < MINRUN [
     ask gunTracks [die]
     ask turtleships [set damageTakenThisTick 0]
     move-turtleTorpedoes
@@ -1215,6 +1213,9 @@ NetLogo 6.4.0
     <metric>sum [damageTakenThisTick] of turtleShips with [fleet = "German"]</metric>
     <metric>sum [bowGuns + sternGuns + portGuns + starbGuns] of turtleShips with [fleet = "German"]</metric>
     <enumeratedValueSet variable="debug">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="cosmetics">
       <value value="false"/>
     </enumeratedValueSet>
     <steppedValueSet variable="BritishDelay" first="0" step="1" last="10"/>
