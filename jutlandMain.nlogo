@@ -516,23 +516,8 @@ to move-turtleShips
     ]
 
     if britishSignal = "Disengage" [;   BritishSignal Set by User via chooser
-      ;define behaviour of british ships if signal is "Disengage"
-      ;let hostiles turtleShips with [fleet != "British"] ;get the set of things to evade
 
-     ; if any? hostiles [
         ask turtleShips with [fleet = "British"] [
-;          let closestHostile min-one-of hostiles [distance myself] ; finds closest hostile
-;          let hostilesDestination patch [xcor] of closestHostile [ycor] of closestHostile
-;          show hostilesDestination
-;          let hostileDistToDest getdistance closestHostile hostilesDestination
-;          if hostileDistToDest > distance hostilesDestination [ ;if ship is not between hositle and its detination
-;            set destinationX [destinationX] of closestHostile ;placeholder, NEED TO FIGURE OUT EVASION SUBTRACT HEADING? IF torpedo match heading if ship head away
-;            set destinationY [destinationY] of closestHostile
-;          ]
-;          if hostileDistToDest <= distance hostilesDestination [ ; if ship is between target and its destination
-;            set destinationX [0 - destinationX] of closestHostile ;placeholder, NEED TO FIGURE OUT EVASION SUBRTACT HEADING?
-;            set destinationY [0 - destinationY] of closestHostile
-;          ]
           set destinationX max-pxcor
           set destinationY ycor
         ]
@@ -667,8 +652,7 @@ to shoot-turtleShips
 end
 
 to fireTurrets [targetShip gunsInArc]
-
-  create-guntrack-to targetShip
+  if cosmetics = true [create-guntrack-to targetShip]
 
   ;; Calculate line of sight visibility
   let losFactor line-of-sight-factor self targetShip
@@ -853,6 +837,11 @@ to set-cosmetics
   ask gunTracks [palette:set-alpha 50]
   ask torpTracks [
     set color white
+  if cosmetics = False[
+      ask links[
+      set hidden? True
+      ]
+    ]
   ]
 end
 
@@ -869,13 +858,7 @@ to setup
 end
 
 to go
-  while [FleetInContact or ticks < MINRUN]
-  [
-    if cosmetics = False[
-      ask links[
-        set hidden? True
-      ]
-    ]
+  if FleetInContact or ticks < MINRUN [
     ask gunTracks [die]
     ask turtleships [set damageTakenThisTick 0]
     move-turtleTorpedoes
@@ -977,7 +960,7 @@ BritishDelay
 BritishDelay
 0
 15
-15.0
+13.0
 1
 1
 Tick
@@ -1484,6 +1467,9 @@ NetLogo 6.4.0
     <metric>sum [damageTakenThisTick] of turtleShips with [fleet = "German"]</metric>
     <metric>sum [bowGuns + sternGuns + portGuns + starbGuns] of turtleShips with [fleet = "German"]</metric>
     <enumeratedValueSet variable="debug">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="cosmetics">
       <value value="false"/>
     </enumeratedValueSet>
     <steppedValueSet variable="BritishDelay" first="0" step="1" last="10"/>
