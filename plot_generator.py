@@ -5,23 +5,39 @@ import seaborn
 import os
 import glob
 
-INPUT_TABLE_FILE = os.path.abspath("jutlandMain Monte Carlo-table.csv")
+INPUT_TABLE_FILE_BASE = os.path.abspath("jutlandMain Monte Carlo-table-*.csv")
 OUTPUT_PATH = os.path.join(os.getcwd(), "plots")
 
 TIME_PLOTS = os.path.join(OUTPUT_PATH, "time_plots")
 BOX_PLOTS = os.path.join(OUTPUT_PATH, "box_plots")
 HEAT_MAPS = os.path.join(OUTPUT_PATH, "heat_maps")
+STD_DIR = os.path.join(OUTPUT_PATH, "standard_deviation_maps")
+CORR_PLOTS = os.path.join(OUTPUT_PATH, "correlation_plots")
 
 SIM_END_TIC = 70
 
-# Use glob to find all .jpg files in the current directory
+# Clean up any plots previously generated
 jpg_files = glob.glob("*.jpg", root_dir=OUTPUT_PATH)
-
-# Loop through and remove each file
 for jpg in jpg_files:
     os.remove(os.path.join(OUTPUT_PATH, jpg))
 
-df = pd.read_csv(INPUT_TABLE_FILE, skiprows=6)
+# Read in data from all data files
+csv_file_names = glob.glob(INPUT_TABLE_FILE_BASE)
+
+df_list = []
+run_num_offset = 0
+for idx, file_name in enumerate(sorted(csv_file_names)):
+    # read in data
+    df_temp = pd.read_csv(file_name, skiprows=6)
+    
+    # Offset the run_id so they are still unique
+    df_temp["[run number]"] += run_num_offset
+    run_num_offset = df_temp["[run number]"].max() + 1
+
+    # store data to list to be combined together later
+    df_list.append(df_temp)
+df = pd.concat(df_list, ignore_index=True)
+
 if len(df.columns) == 15:
     df.columns = ['Run_id', 'Debug_Flag', 'British_Delay', 'German_Disengage_Delay', 'British_Signal',
                   'Simulation_Tick', 'Simulation_Time', 
@@ -42,11 +58,44 @@ elif len(df.columns) == 23:
                   'German_Ship_Count-cruiser','German_Ship_Count-battleship',
                   'German_Fleet_Health', 'German_Fleet_Damage_This_Tick', 'German_Gunnery_Count']
     
+elif len(df.columns) == 25:
+    df.columns = ['Run_id', 'Debug_Flag', "cosmetics", "smoke-switch",
+                  'British_Delay', 'German_Disengage_Delay', 'British_Signal',
+                  'Simulation_Tick', 'Simulation_Time', 
+                  
+                  'British_Ship_Count',
+                  'British_Ship_Count-destroyer', 'British_Ship_Count-battlecruiser',
+                  'British_Ship_Count-cruiser','British_Ship_Count-battleship',
+                  'British_Fleet_Health', 'British_Fleet_Damage_This_Tick', 'British_Gunnery_Count',
+                  
+                  'German_Ship_Count',
+                  'German_Ship_Count-destroyer', 'German_Ship_Count-battlecruiser',
+                  'German_Ship_Count-cruiser','German_Ship_Count-battleship',
+                  'German_Fleet_Health', 'German_Fleet_Damage_This_Tick', 'German_Gunnery_Count']
+
 else:
     raise ValueError("Unsupported number of MC variables. Please specify table format and retry.")
 
+# df = df[df["smoke-switch"] == True]
 df["British_Damage_Cumulative"] = df.groupby('Run_id')['British_Fleet_Damage_This_Tick'].cumsum()
 df["German_Damage_Cumulative"] = df.groupby('Run_id')['German_Fleet_Damage_This_Tick'].cumsum()
+
+def get_min_max(plot_var, fleet="Both", data_frame=df):
+    # Filter for the relevant columns and flatten the data
+    british_ship_count = data_frame[f'British_{plot_var}'].values
+    german_ship_count = data_frame[f'German_{plot_var}'].values
+
+    if fleet.lower() == "british":
+        return british_ship_count.min(), british_ship_count.max()
+    
+    if fleet.lower() == "german":
+        return german_ship_count.min(), german_ship_count.max()
+    
+    # Find the global min and max across both British and German ship counts
+    global_min = min(british_ship_count.min(), german_ship_count.min())
+    global_max = max(british_ship_count.max(), german_ship_count.max())
+    
+    return global_min, global_max
 
 ######################################
 ### Plotting Sim Outputs over Time ###
@@ -61,7 +110,7 @@ def plot_all_over_time():
                  'German_Ship_Count', 'German_Fleet_Health', 'German_Gunnery_Count', 
                  "German_Fleet_Damage_This_Tick", "German_Damage_Cumulative",
                  'German_Ship_Count-destroyer', 'German_Ship_Count-battlecruiser',
-                 'German_Ship_Count-cruiser','German_Ship_Count-battleship',]
+                 'German_Ship_Count-cruiser','German_Ship_Count-battleship']
     
     for g_var in group_vars:
         for p_var in plot_vars:
@@ -100,29 +149,14 @@ def plot_over_time(group_var: str, plot_var: str, british_signal: str, x_axis: s
 def plot_all_box_plots():
     group_vars = ["British_Delay", "German_Disengage_Delay"]
     british_signals = ["Disengage", "Engage"]
-    plot_vars = ['Ship_Count', 'Fleet_Health', 'Gunnery_Count', "Damage_Cumulative"]
+    plot_vars = ['Ship_Count', 'Fleet_Health', 'Gunnery_Count', "Damage_Cumulative",
+                 'Ship_Count-destroyer', 'Ship_Count-battlecruiser',
+                 'Ship_Count-cruiser','Ship_Count-battleship']
     
     for g_var in group_vars:
         for p_var in plot_vars:
             for b_sig in british_signals:
                 box_plot(g_var, p_var, b_sig)
-
-def get_min_max(plot_var, fleet="Both", data_frame=df):
-    # Filter for the relevant columns and flatten the data
-    british_ship_count = data_frame[f'British_{plot_var}'].values
-    german_ship_count = data_frame[f'German_{plot_var}'].values
-
-    if fleet.lower() == "british":
-        return british_ship_count.min(), british_ship_count.max()
-    
-    if fleet.lower() == "german":
-        return german_ship_count.min(), german_ship_count.max()
-    
-    # Find the global min and max across both British and German ship counts
-    global_min = min(british_ship_count.min(), german_ship_count.min())
-    global_max = max(british_ship_count.max(), german_ship_count.max())
-    
-    return global_min, global_max
 
 def box_plot(group_var: str, plot_var: str, british_signal: str, x_axis: str = "", y_axis: str = ""):
     os.makedirs(BOX_PLOTS, exist_ok=True)
@@ -193,23 +227,81 @@ def heat_map(plot_var: str, british_signal: str):
     plt.close()
 
 
+###########################
+### Standard Deviations ###
+###########################
+def plot_all_standard_deviations():
+    british_signals = ["Disengage", "Engage"]
+    plot_vars = ['British_Ship_Count', 'British_Fleet_Health', 'British_Gunnery_Count', "British_Damage_Cumulative",
+              'German_Ship_Count', 'German_Fleet_Health', 'German_Gunnery_Count', "German_Damage_Cumulative"]
+    
+    for p_var in plot_vars:
+        for b_sig in british_signals:
+            standard_deviation_map(p_var, b_sig)
+
+def standard_deviation_map(plot_var: str, british_signal: str):
+    os.makedirs(STD_DIR, exist_ok=True)
+    fleet, var_name = plot_var.split("_", 1)
+    
+    # Create a pivot table for final British ship count based on British_Delay and German_Disengage
+    
+    final_data = df.groupby(['Run_id']).last()
+    # var_min, var_max = get_min_max(var_name, fleet, data_frame=final_data)
+
+    filtered_df = df[(df['British_Signal'] == british_signal) & (df["smoke-switch"] == True)]
+    final_data = filtered_df.groupby(['Run_id','British_Delay','German_Disengage_Delay']).last()
+    pivot_table = final_data.pivot_table(
+        index='British_Delay', 
+        columns='German_Disengage_Delay', 
+        values=plot_var,
+        aggfunc='std'
+    )
+
+    # Plot a heatmap
+    plt.figure(figsize=(10, 6))
+    seaborn.heatmap(pivot_table, annot=True, cmap='inferno', fmt='.1f', cbar_kws={'label': 'Average British Ship Count'})
+    plt.title(f'Average Final {plot_var.replace("_", " ").title()} vs. British Delay and German Disengage (British Signal = {british_signal})')
+    plt.xlabel('German Disengage')
+    plt.ylabel('British Delay')
+    plt.savefig(os.path.join(STD_DIR, f"{plot_var}_std-{british_signal}.jpg"), format="jpg")
+    plt.close()
+
+
 #####################################
 ### Correlation plot of variables ###
 #####################################
-def correlation_plot():
-    os.makedirs(OUTPUT_PATH, exist_ok=True)
+def plot_all_correlation_plots():
+    fleets = ["british", "german", "british_german"]
+    levels = ["basic", "adv"]
+
+    for f in fleets:
+        for l in levels:
+            correlation_plot(f"{f}_{l}")
+
+def correlation_plot(var_subset: str = "british_german_adv"):
+    os.makedirs(CORR_PLOTS, exist_ok=True)
 
     # Select relevant columns for correlation analysis
     df['British_Signal_Numeric'] = df['British_Signal'].map({'Engage': 1, 'Disengage': 0})
-    correlation_data = df[['British_Delay', 'German_Disengage_Delay', 'British_Signal_Numeric', 
-                           'British_Ship_Count',
-                           'British_Ship_Count-destroyer', 'British_Ship_Count-battlecruiser',
-                           'British_Ship_Count-cruiser','British_Ship_Count-battleship',
-                           'British_Fleet_Health', 'British_Fleet_Damage_This_Tick', 'British_Gunnery_Count',
-                           'German_Ship_Count',
-                           'German_Ship_Count-destroyer', 'German_Ship_Count-battlecruiser',
-                           'German_Ship_Count-cruiser','German_Ship_Count-battleship',
-                           'German_Fleet_Health', 'German_Fleet_Damage_This_Tick', 'German_Gunnery_Count']]
+    
+    # Determine what variables we should include in the plot
+    filter_vars = ['British_Delay', 'German_Disengage_Delay', 'British_Signal_Numeric']
+    if ("british" in var_subset):
+        filter_vars += ['British_Ship_Count', 'British_Fleet_Health', 
+                        'British_Fleet_Damage_This_Tick', 'British_Gunnery_Count']
+    if ("british" in var_subset and "adv" in var_subset):
+        filter_vars += ['British_Ship_Count-destroyer', 'British_Ship_Count-battlecruiser', 
+                        'British_Ship_Count-cruiser','British_Ship_Count-battleship',
+                        'British_Fleet_Damage_This_Tick']
+    if ("german" in var_subset):
+        filter_vars += ['German_Ship_Count', 'German_Fleet_Health', 
+                        'German_Fleet_Damage_This_Tick', 'German_Gunnery_Count']
+    if ("german" in var_subset and "adv" in var_subset):
+        filter_vars += ['German_Ship_Count-destroyer', 'German_Ship_Count-battlecruiser', 
+                        'German_Ship_Count-cruiser','German_Ship_Count-battleship',
+                        'German_Fleet_Damage_This_Tick']
+    
+    correlation_data = df[filter_vars]
 
     # Calculate correlation matrix
     corr_matrix = correlation_data.corr()
@@ -224,11 +316,13 @@ def correlation_plot():
     plt.yticks([i+1 for i in range(len(corr_matrix.index))], [idx.replace('_', ' ').title() for idx in corr_matrix.index])
     plt.tight_layout()
     # plt.subplots_adjust(left=0.2, right=0.9, top=0.9, bottom=0.2)
-    plt.savefig(os.path.join(OUTPUT_PATH, f"corelation_matrix.jpg"), format="jpg")
+    plt.savefig(os.path.join(CORR_PLOTS, f"corelation_matrix-{var_subset}.jpg"), format="jpg")
     plt.close()
 
-plot_all_over_time()
-plot_all_box_plots()
-plot_all_heat_maps()
-correlation_plot()
+if __name__ == "__main__":
+    plot_all_over_time()
+    plot_all_box_plots()
+    plot_all_heat_maps()
+    plot_all_standard_deviations()
+    plot_all_correlation_plots()
 

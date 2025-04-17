@@ -5,6 +5,7 @@
 *.csv
 
 # Plotting outputs
+plots*/
 *.jpg
 
 # Python Virtual Environment
