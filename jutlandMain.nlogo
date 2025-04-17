@@ -1447,7 +1447,7 @@ NetLogo 6.4.0
   <experiment name="Monte Carlo" repetitions="10" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="70"/>
+    <timeLimit steps="100"/>
     <exitCondition>"FleetInContact" = FALSE</exitCondition>
     <metric>time:show SimTime "HH:mm:ss"</metric>
     <metric>count turtleShips with [fleet = "British"]</metric>
@@ -1470,6 +1470,10 @@ NetLogo 6.4.0
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="cosmetics">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="smoke-switch">
+      <value value="true"/>
       <value value="false"/>
     </enumeratedValueSet>
     <steppedValueSet variable="BritishDelay" first="0" step="1" last="10"/>
