@@ -5,10 +5,10 @@ extensions [
 ]
 ;### Declare Globals###
 globals [
-  BattleShipMagazineDmgBreakPoint ;imported and calculated from battleShipDamage.csv
-  BattleShipEngineDmgBreakPoint   ;imported and calculated from battleShipDamage.csv
-  BattleShipRudderDmgBreakPoint   ;imported and calculated from battleShipDamage.csv
-  BattleShipTurretDmgBreakPoint   ;imported and calculated from battleShipDamage.csv
+  BattleShipMagazineDmgBreakPoint ;imported and calculated from simulation_inputs/battleShipDamage.csv
+  BattleShipEngineDmgBreakPoint   ;imported and calculated from simulation_inputs/battleShipDamage.csv
+  BattleShipRudderDmgBreakPoint   ;imported and calculated from simulation_inputs/battleShipDamage.csv
+  BattleShipTurretDmgBreakPoint   ;imported and calculated from simulation_inputs/battleShipDamage.csv
   TORPEDOSPEED
   TORPEDOLIFETIME
   TORPEDODAMAGE
@@ -46,27 +46,27 @@ patches-own [
 
 ; ### Declare Agent Variables ###
 turtleShips-own [
-  shipId       ;Imported from orderOfBattle.csv
-  name         ;Imported from orderOfBattle.csv
-  fleet        ;Imported from orderOfBattle.csv
+  shipId       ;Imported from simulation_inputs/orderOfBattle.csv
+  name         ;Imported from simulation_inputs/orderOfBattle.csv
+  fleet        ;Imported from simulation_inputs/orderOfBattle.csv
   enemyfleet   ;calculated
-  shipBehaviour   ;Imported from orderOfBattle.csv
-  twelveInchEquiv     ;Imported from orderOfBattle.csv
-  destinationX ;Imported from orderOfBattle.csv
-  destinationY ;Imported from orderOfBattle.csv
-  maxTurn      ;Imported from orderOfBattle.csv
-  speed        ;Imported from orderOfBattle.csv
-  gunCaliber   ;Imported from orderOfBattle.csv
-  maxGunRange  ;Imported from orderOfBattle.csv
-  gunRateOfFire ;Imported from orderOfBattle.csv
-  bowGuns      ;Imported from orderOfBattle.csv
-  sternGuns    ;Imported from orderOfBattle.csv
-  portGuns     ;Imported from orderOfBattle.csv
-  starbGuns    ;Imported from orderOfBattle.csv
-  torpedoTubes ;Imported from orderOfBattle.csv
-  shipLength   ;Imported from orderOfBattle.csv
-  shipBeam     ;Imported from orderOfBattle.csv
-  hullPoints   ;Imported from orderOfBattle.csv
+  shipBehaviour   ;Imported from simulation_inputs/orderOfBattle.csv
+  twelveInchEquiv     ;Imported from simulation_inputs/orderOfBattle.csv
+  destinationX ;Imported from simulation_inputs/orderOfBattle.csv
+  destinationY ;Imported from simulation_inputs/orderOfBattle.csv
+  maxTurn      ;Imported from simulation_inputs/orderOfBattle.csv
+  speed        ;Imported from simulation_inputs/orderOfBattle.csv
+  gunCaliber   ;Imported from simulation_inputs/orderOfBattle.csv
+  maxGunRange  ;Imported from simulation_inputs/orderOfBattle.csv
+  gunRateOfFire ;Imported from simulation_inputs/orderOfBattle.csv
+  bowGuns      ;Imported from simulation_inputs/orderOfBattle.csv
+  sternGuns    ;Imported from simulation_inputs/orderOfBattle.csv
+  portGuns     ;Imported from simulation_inputs/orderOfBattle.csv
+  starbGuns    ;Imported from simulation_inputs/orderOfBattle.csv
+  torpedoTubes ;Imported from simulation_inputs/orderOfBattle.csv
+  shipLength   ;Imported from simulation_inputs/orderOfBattle.csv
+  shipBeam     ;Imported from simulation_inputs/orderOfBattle.csv
+  hullPoints   ;Imported from simulation_inputs/orderOfBattle.csv
   damageTakenThisTick  ;calculated.
   lostHp       ;amount of HP ship has lost from max hp
   inContactWithEnemy ;True if enemy is within visual range
@@ -119,11 +119,11 @@ to setup-patches
 end
 
 to setup-turtleShips
-  ;load the attributes of ships and their fleet from the orderOfBattle.csv
+  ;load the attributes of ships and their fleet from the simulation_inputs/orderOfBattle.csv
   file-close-all ;protects against unfinished setups that kept csv locked
 
-  file-open "orderOfBattle.csv"
-  if debug [print "=== Loading Ships from orderOfBattle.csv ==="]
+  file-open "simulation_inputs/orderOfBattle.csv"
+  if debug [print "=== Loading Ships from simulation_inputs/orderOfBattle.csv ==="]
   let csvHeadings csv:from-row file-read-line
   if debug [print csvHeadings]
   while [not file-at-end?][
@@ -204,10 +204,10 @@ to load-DamageGlobals
   ;loads the chances of sustaining crtical damage and converts to breakpoints
 
   file-close-all ;protects against unfinished setups that kept csv locked
-  if debug [print "=== Loading Damage Breakpoints from *Class*Damage.csv ==="]
+  if debug [print "=== Loading Damage Breakpoints from simulation_inputs/*Class*Damage.csv ==="]
 
   if debug [print "loading Battleship Damage Breakpoints"]
-  file-open "battleShipDamage.csv"
+  file-open "simulation_inputs/battleShipDamage.csv"
   let csvHeadings csv:from-row file-read-line
   if debug [print csvHeadings]
   let rowdata csv:from-row file-read-line
@@ -263,9 +263,9 @@ to load-SmokeGlobals
   ;loads parameters regarding smokes
 
   file-close-all ;protects against unfinished setups that kept csv locked
-  if debug [print "=== Loading Smoke Parameters from smoke.csv ==="]
+  if debug [print "=== Loading Smoke Parameters from simulation_inputs/smoke.csv ==="]
 
-  let data csv:from-file "smoke.csv"
+  let data csv:from-file "simulation_inputs/smoke.csv"
   set SmokeParameters item 1 data
   set ExplosionSmoke (item 3 data)
   set EngineRoomSmoke (item 4 data)
