@@ -15,12 +15,13 @@ HEAT_MAPS = os.path.join(OUTPUT_PATH, "heat_maps")
 STD_DIR = os.path.join(OUTPUT_PATH, "standard_deviation_maps")
 CORR_PLOTS = os.path.join(OUTPUT_PATH, "correlation_plots")
 
-SIM_END_TIC = 70
+SIM_END_TIC = 100
 
-# Clean up any plots previously generated
-jpg_files = glob.glob(f"{OUTPUT_PATH}/**/*.jpg", recursive=True)
-for jpg in jpg_files:
-    os.remove(os.path.join(OUTPUT_PATH, jpg))
+def clean_plots():
+    # Clean up any plots previously generated
+    jpg_files = glob.glob(f"{OUTPUT_PATH}/**/*.jpg", recursive=True)
+    for jpg in jpg_files:
+        os.remove(os.path.join(OUTPUT_PATH, jpg))
 
 # Read in data from all data files
 csv_file_names = glob.glob(INPUT_TABLE_FILE_BASE)
@@ -98,6 +99,39 @@ def get_min_max(plot_var, fleet="Both", data_frame=df):
     
     return global_min, global_max
 
+
+########################
+### Print Statistics ###
+########################
+def print_stats():
+    vars = ['British_Ship_Count', 'British_Fleet_Health', 'British_Gunnery_Count', 
+                 "British_Damage_Cumulative",
+                 'British_Ship_Count-destroyer', 'British_Ship_Count-battlecruiser',
+                 'British_Ship_Count-cruiser','British_Ship_Count-battleship',
+                 'German_Ship_Count', 'German_Fleet_Health', 'German_Gunnery_Count', 
+                 "German_Damage_Cumulative",
+                 'German_Ship_Count-destroyer', 'German_Ship_Count-battlecruiser',
+                 'German_Ship_Count-cruiser','German_Ship_Count-battleship']
+    
+    for v in vars:
+        print_var_mean(v)
+    
+def print_var_mean(var):
+    british_engage = df[df['British_Signal']=='Engage'].groupby(['Run_id']).last()
+    british_dont_engage = df[df['British_Signal']=='Disengage'].groupby(['Run_id']).last()
+    
+    print(f'''
+--- {var} ---
+\tEngage: \t{british_engage[var].mean()} +/- {british_engage[var].std()}
+\t   min: \t{british_engage[var].min()}
+\t   max: \t{british_engage[var].max()}
+\tDisengage: \t{british_dont_engage[var].mean()} +/- {british_dont_engage[var].std()}
+\t   min: \t{british_dont_engage[var].min()}
+\t   max: \t{british_dont_engage[var].max()}
+\tPercentage Decrease: \t{((british_dont_engage[var].mean()-british_engage[var].mean())/british_dont_engage[var].mean())*100}
+''')
+
+
 ######################################
 ### Plotting Sim Outputs over Time ###
 ######################################
@@ -139,6 +173,7 @@ def plot_over_time(group_var: str, plot_var: str, british_signal: str, x_axis: s
     if len(y_axis) == 0: y_axis = f"Average {plot_var.replace('_', ' ').title()}"
     plt.title(f'{y_axis} vs. {x_axis} (British Signal = {british_signal})')
     plt.xlabel(x_axis)
+    plt.xlim(0, SIM_END_TIC)
     plt.ylabel(y_axis)
     plt.ylim(ymin, ymax)
     plt.legend(title=group_var.replace('_', ' ').title(), loc='upper left', bbox_to_anchor=(1, 1))
@@ -353,10 +388,12 @@ def correlation_plot(var_subset: str = "british_german_adv"):
     plt.savefig(os.path.join(CORR_PLOTS, f"corelation_matrix-{var_subset}.jpg"), format="jpg")
     plt.close()
 
+
 if __name__ == "__main__":
+    clean_plots()
+    print_stats()
     plot_all_over_time()
     plot_all_box_plots()
     plot_all_heat_maps()
     plot_all_standard_deviations()
     plot_all_correlation_plots()
-
