@@ -83,18 +83,18 @@ df["German_Damage_Cumulative"] = df.groupby('Run_id')['German_Fleet_Damage_This_
 
 def get_min_max(plot_var, fleet="Both", data_frame=df):
     # Filter for the relevant columns and flatten the data
-    british_ship_count = data_frame[f'British_{plot_var}'].values
-    german_ship_count = data_frame[f'German_{plot_var}'].values
+    british_data = data_frame[f'British_{plot_var}'].values
+    german_data = data_frame[f'German_{plot_var}'].values
 
     if fleet.lower() == "british":
-        return british_ship_count.min(), british_ship_count.max()
+        return british_data.min(), british_data.max()
     
     if fleet.lower() == "german":
-        return german_ship_count.min(), german_ship_count.max()
+        return german_data.min(), german_data.max()
     
     # Find the global min and max across both British and German ship counts
-    global_min = min(british_ship_count.min(), german_ship_count.min())
-    global_max = max(british_ship_count.max(), german_ship_count.max())
+    global_min = min(british_data.min(), german_data.min())
+    global_max = max(british_data.max(), german_data.max())
     
     return global_min, global_max
 
@@ -120,10 +120,14 @@ def plot_all_over_time():
 
 def plot_over_time(group_var: str, plot_var: str, british_signal: str, x_axis: str = "", y_axis: str = ""):
     os.makedirs(TIME_PLOTS, exist_ok=True)
+
     plt.figure(figsize=(12, 6))
     df_brit_avg = df.groupby([group_var, 'British_Signal', 'Simulation_Tick']).agg(
         avg_plot_var=(plot_var, 'mean'),
     ).reset_index()
+
+    ymin = df_brit_avg["avg_plot_var"][df_brit_avg['Simulation_Tick'] <= SIM_END_TIC].min()
+    ymax = df_brit_avg["avg_plot_var"][df_brit_avg['Simulation_Tick'] <= SIM_END_TIC].max()
 
     for g_var in df_brit_avg[group_var].unique():
         group_data = df_brit_avg[(df_brit_avg[group_var] == g_var) & 
@@ -136,6 +140,7 @@ def plot_over_time(group_var: str, plot_var: str, british_signal: str, x_axis: s
     plt.title(f'{y_axis} vs. {x_axis} (British Signal = {british_signal})')
     plt.xlabel(x_axis)
     plt.ylabel(y_axis)
+    plt.ylim(ymin, ymax)
     plt.legend(title=group_var.replace('_', ' ').title(), loc='upper left', bbox_to_anchor=(1, 1))
     plt.grid(True)
     plt.tight_layout()
@@ -148,7 +153,9 @@ def plot_over_time(group_var: str, plot_var: str, british_signal: str, x_axis: s
 #####################################
 def plot_all_box_plots():
     group_vars = ["British_Delay", "German_Disengage_Delay"]
-    plot_vars = ['Ship_Count', 'Fleet_Health', 'Gunnery_Count', "Damage_Cumulative"]
+    plot_vars = ['Ship_Count', 'Fleet_Health', 'Gunnery_Count', "Damage_Cumulative",
+                 'Ship_Count-destroyer', 'Ship_Count-battlecruiser',
+                 'Ship_Count-cruiser','Ship_Count-battleship']
     british_signals = ["Disengage", "Engage"]
     fleets = ["British", "German"]
 
@@ -246,7 +253,7 @@ def heat_map(plot_var: str, british_signal: str):
 
     # Plot a heatmap
     plt.figure(figsize=(10, 6))
-    seaborn.heatmap(pivot_table, annot=True, cmap='inferno', fmt='.1f', cbar_kws={'label': 'Average British Ship Count'}, vmin=var_min, vmax=var_max)
+    seaborn.heatmap(pivot_table, annot=True, cmap='inferno', fmt='.1f', cbar_kws={'label': f'Average Final {plot_var.replace("_", " ").title()}'}, vmin=var_min, vmax=var_max)
     plt.title(f'Average Final {plot_var.replace("_", " ").title()} vs. British Delay and German Disengage (British Signal = {british_signal})')
     plt.xlabel('German Disengage')
     plt.ylabel('British Delay')
