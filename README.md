@@ -4,7 +4,7 @@ This project models the **Battle of Jutland** using [NetLogo](https://ccl.northw
 The simulation starts at 7:15 UTC simulating the second crossing of the T. The goal of the simulation
 was to investigate the following research question:
 
-> **Research Question:**
+> **Research Question:**  
 > Should Jellicoe have ordered the Grand fleet through the covering torpedo salvo to 
 > remain in contact with the High Seas Fleet at dusk on May 31st?
 
