@@ -287,8 +287,14 @@ end
 
 to-report blend-color [c1 c2 fraction]
   ;; create mixed colors
-  let rgb1 extract-rgb c1
-  let rgb2 extract-rgb c2
+  let rgb1 c1
+  if (not is-list? c1) [
+    set rgb1 extract-rgb c1
+  ]
+  let rgb2 c2
+  if (not is-list? c2) [
+    set rgb2 extract-rgb c2
+  ]
   let r1 item 0 rgb1
   let g1 item 1 rgb1
   let b1 item 2 rgb1
@@ -385,13 +391,13 @@ to update-smoke
       ifelse smoke < 0.05 [
         set smoke 0
         set visibility 100
-        set pcolor blue
+        set pcolor blend-color pcolor black 0
 
       ] [
         let visibility_reduction 100 - smoke / 10
         set visibility max list 0 (min list visibility_reduction 100)
         let frac min (list (smoke / maxSmoke) 1)
-        set pcolor blend-color blue black frac
+        set pcolor blend-color pcolor black frac
       ]
     ]
   ]
@@ -1035,7 +1041,7 @@ SWITCH
 597
 cosmetics
 cosmetics
-1
+0
 1
 -1000
 
@@ -1057,7 +1063,7 @@ SWITCH
 639
 smoke-switch
 smoke-switch
-1
+0
 1
 -1000
 
@@ -1473,7 +1479,6 @@ NetLogo 6.4.0
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="smoke-switch">
-      <value value="true"/>
       <value value="false"/>
     </enumeratedValueSet>
     <steppedValueSet variable="BritishDelay" first="0" step="1" last="10"/>
