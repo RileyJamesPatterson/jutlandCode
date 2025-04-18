@@ -9,7 +9,8 @@ INPUT_TABLE_FILE_BASE = os.path.abspath("jutlandMain Monte Carlo-table-*.csv")
 OUTPUT_PATH = os.path.join(os.getcwd(), "plots")
 
 TIME_PLOTS = os.path.join(OUTPUT_PATH, "time_plots")
-BOX_PLOTS = os.path.join(OUTPUT_PATH, "box_plots")
+BOX_PLOTS_FLEET = os.path.join(OUTPUT_PATH, "box_plots_signal")
+BOX_PLOTS_SIGNAL = os.path.join(OUTPUT_PATH, "box_plots_fleet")
 HEAT_MAPS = os.path.join(OUTPUT_PATH, "heat_maps")
 STD_DIR = os.path.join(OUTPUT_PATH, "standard_deviation_maps")
 CORR_PLOTS = os.path.join(OUTPUT_PATH, "correlation_plots")
@@ -17,7 +18,7 @@ CORR_PLOTS = os.path.join(OUTPUT_PATH, "correlation_plots")
 SIM_END_TIC = 70
 
 # Clean up any plots previously generated
-jpg_files = glob.glob("*.jpg", root_dir=OUTPUT_PATH)
+jpg_files = glob.glob(f"{OUTPUT_PATH}/**/*.jpg", recursive=True)
 for jpg in jpg_files:
     os.remove(os.path.join(OUTPUT_PATH, jpg))
 
@@ -117,7 +118,6 @@ def plot_all_over_time():
             for b_sig in british_signals:
                 plot_over_time(g_var, p_var, b_sig)
 
-
 def plot_over_time(group_var: str, plot_var: str, british_signal: str, x_axis: str = "", y_axis: str = ""):
     os.makedirs(TIME_PLOTS, exist_ok=True)
     plt.figure(figsize=(12, 6))
@@ -148,18 +148,18 @@ def plot_over_time(group_var: str, plot_var: str, british_signal: str, x_axis: s
 #####################################
 def plot_all_box_plots():
     group_vars = ["British_Delay", "German_Disengage_Delay"]
+    plot_vars = ['Ship_Count', 'Fleet_Health', 'Gunnery_Count', "Damage_Cumulative"]
     british_signals = ["Disengage", "Engage"]
-    plot_vars = ['Ship_Count', 'Fleet_Health', 'Gunnery_Count', "Damage_Cumulative",
-                 'Ship_Count-destroyer', 'Ship_Count-battlecruiser',
-                 'Ship_Count-cruiser','Ship_Count-battleship']
-    
+    fleets = ["British", "German"]
+
     for g_var in group_vars:
         for p_var in plot_vars:
-            for b_sig in british_signals:
-                box_plot(g_var, p_var, b_sig)
+            for b_sig, f_leet in zip(british_signals, fleets):
+                box_plot_comp_fleet(g_var, p_var, b_sig)
+                box_plot_comp_signal(g_var, p_var, f_leet)
 
-def box_plot(group_var: str, plot_var: str, british_signal: str, x_axis: str = "", y_axis: str = ""):
-    os.makedirs(BOX_PLOTS, exist_ok=True)
+def box_plot_comp_fleet(group_var: str, plot_var: str, british_signal: str, x_axis: str = "", y_axis: str = ""):
+    os.makedirs(BOX_PLOTS_FLEET, exist_ok=True)
 
     y_min, y_max = get_min_max(plot_var)
     filtered_df = df[df['British_Signal'] == british_signal]
@@ -183,7 +183,34 @@ def box_plot(group_var: str, plot_var: str, british_signal: str, x_axis: str = "
     plt.legend(title="Fleet", loc='upper left', bbox_to_anchor=(1, 1))
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig(os.path.join(BOX_PLOTS, f"{group_var}_vs_{plot_var}_boxplot-{british_signal}.jpg"), format="jpg")
+    plt.savefig(os.path.join(BOX_PLOTS_FLEET, f"{group_var}_vs_{plot_var}_boxplot-{british_signal}.jpg"), format="jpg")
+    plt.close()
+
+def box_plot_comp_signal(group_var: str, plot_var: str, fleet: str, x_axis: str = "", y_axis: str = ""):
+    os.makedirs(BOX_PLOTS_SIGNAL, exist_ok=True)
+
+    df_disengage = df[df['British_Signal'] == 'Disengage']
+    df_engage = df[df['British_Signal'] == 'Engage']
+    box_plot_data = pd.DataFrame({
+        "Disengage": df_disengage.groupby('Run_id')[f'{fleet}_{plot_var}'].last(),
+        "Engage": df_engage.groupby('Run_id')[f'{fleet}_{plot_var}'].last(),
+        group_var: df.groupby('Run_id')[group_var].first(),
+    })
+
+    plt.figure(figsize=(10, 6))
+    seaborn.boxplot(x=group_var, y=f'Disengage', data=box_plot_data, color='orange', label='British Signal = Disengage', showfliers=False)
+    seaborn.boxplot(x=group_var, y=f'Engage', data=box_plot_data, color='cyan', label='British Signal = Engage', showfliers=False)
+
+    if len(x_axis) == 0: x_axis = group_var.replace("_", " ").title()
+    if len(y_axis) == 0: y_axis = f'Final {plot_var.replace("_", " ").title()} Count'
+    plt.xlabel(x_axis)
+    plt.ylabel(y_axis)
+    plt.title(f'{y_axis} vs. {x_axis} (Fleet = {fleet})')
+    plt.xticks(rotation=45)
+    plt.legend(title="Fleet", loc='upper left', bbox_to_anchor=(1, 1))
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(BOX_PLOTS_SIGNAL, f"{group_var}_vs_{plot_var}_boxplot-{fleet}.jpg"), format="jpg")
     plt.close()
 
 
