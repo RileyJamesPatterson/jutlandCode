@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn
 import os
 import glob
+from typing import TextIO
 
 INPUT_TABLE_FILE_BASE = os.path.abspath("jutlandMain Monte Carlo-table-*.csv")
 OUTPUT_PATH = os.path.join(os.getcwd(), "plots")
@@ -17,11 +18,11 @@ CORR_PLOTS = os.path.join(OUTPUT_PATH, "correlation_plots")
 
 SIM_END_TIC = 100
 
-def clean_plots():
+def clean_plots(directory: str = OUTPUT_PATH):
     # Clean up any plots previously generated
-    jpg_files = glob.glob(f"{OUTPUT_PATH}/**/*.jpg", recursive=True)
+    jpg_files = glob.glob(f"{directory}/**/*.jpg", recursive=True)
     for jpg in jpg_files:
-        os.remove(os.path.join(OUTPUT_PATH, jpg))
+        os.remove(os.path.join(directory, jpg))
 
 # Read in data from all data files
 csv_file_names = glob.glob(INPUT_TABLE_FILE_BASE)
@@ -113,10 +114,11 @@ def print_stats():
                  'German_Ship_Count-destroyer', 'German_Ship_Count-battlecruiser',
                  'German_Ship_Count-cruiser','German_Ship_Count-battleship']
     
-    for v in vars:
-        print_var_mean(v)
+    with open(os.path.join(OUTPUT_PATH, "stats.txt"), "w") as f:
+        for v in vars:
+            print_var_mean(v, f)
     
-def print_var_mean(var):
+def print_var_mean(var: str, file: TextIO = None):
     british_engage = df[df['British_Signal']=='Engage'].groupby(['Run_id']).last()
     british_dont_engage = df[df['British_Signal']=='Disengage'].groupby(['Run_id']).last()
     
@@ -129,13 +131,15 @@ def print_var_mean(var):
 \t   min: \t{british_dont_engage[var].min()}
 \t   max: \t{british_dont_engage[var].max()}
 \tPercentage Decrease: \t{((british_dont_engage[var].mean()-british_engage[var].mean())/british_dont_engage[var].mean())*100}
-''')
+''', file=file)
 
 
 ######################################
 ### Plotting Sim Outputs over Time ###
 ######################################
 def plot_all_over_time():
+    clean_plots(TIME_PLOTS)
+
     group_vars = ["British_Delay", "German_Disengage_Delay"]
     british_signals = ["Disengage", "Engage"]
     plot_vars = ['British_Ship_Count', 'British_Fleet_Health', 'British_Gunnery_Count', 
@@ -187,6 +191,9 @@ def plot_over_time(group_var: str, plot_var: str, british_signal: str, x_axis: s
 ### Box Plots of Output Variables ###
 #####################################
 def plot_all_box_plots():
+    clean_plots(BOX_PLOTS_FLEET)
+    clean_plots(BOX_PLOTS_SIGNAL)
+
     group_vars = ["British_Delay", "German_Disengage_Delay"]
     plot_vars = ['Ship_Count', 'Fleet_Health', 'Gunnery_Count', "Damage_Cumulative",
                  'Ship_Count-destroyer', 'Ship_Count-battlecruiser',
@@ -260,6 +267,7 @@ def box_plot_comp_signal(group_var: str, plot_var: str, fleet: str, x_axis: str 
 ### Heat Maps of Input Variables ###
 ####################################
 def plot_all_heat_maps():
+    clean_plots(HEAT_MAPS)
     british_signals = ["Disengage", "Engage"]
     plot_vars = ['British_Ship_Count', 'British_Fleet_Health', 'British_Gunnery_Count', "British_Damage_Cumulative",
               'German_Ship_Count', 'German_Fleet_Health', 'German_Gunnery_Count', "German_Damage_Cumulative"]
@@ -300,6 +308,7 @@ def heat_map(plot_var: str, british_signal: str):
 ### Standard Deviations ###
 ###########################
 def plot_all_standard_deviations():
+    clean_plots(STD_DIR)
     british_signals = ["Disengage", "Engage"]
     plot_vars = ['British_Ship_Count', 'British_Fleet_Health', 'British_Gunnery_Count', "British_Damage_Cumulative",
               'German_Ship_Count', 'German_Fleet_Health', 'German_Gunnery_Count', "German_Damage_Cumulative"]
@@ -340,6 +349,7 @@ def standard_deviation_map(plot_var: str, british_signal: str):
 ### Correlation plot of variables ###
 #####################################
 def plot_all_correlation_plots():
+    clean_plots(CORR_PLOTS)
     fleets = ["british", "german", "british_german"]
     levels = ["basic", "adv"]
 
@@ -376,11 +386,11 @@ def correlation_plot(var_subset: str = "british_german_adv"):
     corr_matrix = correlation_data.corr()
 
     # Plot the correlation matrix
-    plt.figure(figsize=(20, 17))
-    seaborn.heatmap(corr_matrix, annot=True, cmap='YlGnBu', fmt='.2f', cbar_kws={'label': 'Correlation'})
+    plt.figure(figsize=(14, 12))
+    seaborn.heatmap(corr_matrix, annot=True, cmap='YlGnBu', fmt='.2f', annot_kws={"size": 10}, cbar_kws={'label': 'Correlation'})
     plt.title('Correlation Matrix for Input Parameters and Ship Counts')
-    plt.xticks(rotation=45)
-    plt.yticks(rotation=45)
+    plt.xticks(rotation=45, fontsize=10)
+    plt.yticks(rotation=45, fontsize=10)
     plt.xticks([i for i in range(len(corr_matrix.columns))], [col.replace('_', ' ').title() for col in corr_matrix.columns])
     plt.yticks([i+1 for i in range(len(corr_matrix.index))], [idx.replace('_', ' ').title() for idx in corr_matrix.index])
     plt.tight_layout()
@@ -390,7 +400,6 @@ def correlation_plot(var_subset: str = "british_german_adv"):
 
 
 if __name__ == "__main__":
-    clean_plots()
     print_stats()
     plot_all_over_time()
     plot_all_box_plots()
