@@ -1,0 +1,7 @@
+smokeScale,maxDiffusion,minDiffusion,minDecay,decayScale,maxSmoke,windStrength,visibilityFactor
+50,0.6,0.2,0.01,0.1,100,4,10
+InitialSmoke,ContinousSmoke,Ticks,"## The amount of smoke generated for Explosion, EngineRoom, Rudder, Turret",,,,
+5000,0,0,,,,,
+50,100,50,,,,,
+0,0,0,,,,,
+0,0,0,,,,,

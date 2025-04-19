@@ -2,9 +2,10 @@
 *.tmp.nlogo
 
 # MC Simulation Outputs
-*.csv
+jutlandMain\ Monte\ Carlo-*.csv
 
 # Plotting outputs
+plots*/
 *.jpg
 
 # Python Virtual Environment

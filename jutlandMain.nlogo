@@ -5,10 +5,10 @@ extensions [
 ]
 ;### Declare Globals###
 globals [
-  BattleShipMagazineDmgBreakPoint ;imported and calculated from battleShipDamage.csv
-  BattleShipEngineDmgBreakPoint   ;imported and calculated from battleShipDamage.csv
-  BattleShipRudderDmgBreakPoint   ;imported and calculated from battleShipDamage.csv
-  BattleShipTurretDmgBreakPoint   ;imported and calculated from battleShipDamage.csv
+  BattleShipMagazineDmgBreakPoint ;imported and calculated from simulation_inputs/battleShipDamage.csv
+  BattleShipEngineDmgBreakPoint   ;imported and calculated from simulation_inputs/battleShipDamage.csv
+  BattleShipRudderDmgBreakPoint   ;imported and calculated from simulation_inputs/battleShipDamage.csv
+  BattleShipTurretDmgBreakPoint   ;imported and calculated from simulation_inputs/battleShipDamage.csv
   TORPEDOSPEED
   TORPEDOLIFETIME
   TORPEDODAMAGE
@@ -23,6 +23,12 @@ globals [
   CurrentBrightness ; global variable to hold the brighness of patches
   BrightnessReductionStep; calculated amount per tick that shade of patches descreases between sunset and naval twilight
   MINRUN; duration in ticks of minimum run
+  ; --- Smokes ---
+  SmokeParameters;
+  ExplosionSmoke;
+  EngineRoomSmoke;
+  RudderSmoke;
+  TurretSmoke;
 ]
 
 ; ### Declare Agent Breeds ###
@@ -32,35 +38,43 @@ breed [torpStart torpStarts] ;starting point for torpedo launch, used to create 
 undirected-link-breed [torpTracks torpTrack]
 directed-link-breed [gunTracks gunTrack]
 
+; ### Declare Patches variables
+patches-own [
+  smoke
+  visibility
+]
+
 ; ### Declare Agent Variables ###
 turtleShips-own [
-  shipId       ;Imported from orderOfBattle.csv
-  name         ;Imported from orderOfBattle.csv
-  fleet        ;Imported from orderOfBattle.csv
+  shipId       ;Imported from simulation_inputs/orderOfBattle.csv
+  name         ;Imported from simulation_inputs/orderOfBattle.csv
+  fleet        ;Imported from simulation_inputs/orderOfBattle.csv
   enemyfleet   ;calculated
-  shipBehaviour   ;Imported from orderOfBattle.csv
-  twelveInchEquiv     ;Imported from orderOfBattle.csv
-  destinationX ;Imported from orderOfBattle.csv
-  destinationY ;Imported from orderOfBattle.csv
-  maxTurn      ;Imported from orderOfBattle.csv
-  speed        ;Imported from orderOfBattle.csv
-  gunCaliber   ;Imported from orderOfBattle.csv
-  maxGunRange  ;Imported from orderOfBattle.csv
-  gunRateOfFire ;Imported from orderOfBattle.csv
-  bowGuns      ;Imported from orderOfBattle.csv
-  sternGuns    ;Imported from orderOfBattle.csv
-  portGuns     ;Imported from orderOfBattle.csv
-  starbGuns    ;Imported from orderOfBattle.csv
-  torpedoTubes ;Imported from orderOfBattle.csv
-  shipLength   ;Imported from orderOfBattle.csv
-  shipBeam     ;Imported from orderOfBattle.csv
-  hullPoints   ;Imported from orderOfBattle.csv
+  shipBehaviour   ;Imported from simulation_inputs/orderOfBattle.csv
+  twelveInchEquiv     ;Imported from simulation_inputs/orderOfBattle.csv
+  destinationX ;Imported from simulation_inputs/orderOfBattle.csv
+  destinationY ;Imported from simulation_inputs/orderOfBattle.csv
+  maxTurn      ;Imported from simulation_inputs/orderOfBattle.csv
+  speed        ;Imported from simulation_inputs/orderOfBattle.csv
+  gunCaliber   ;Imported from simulation_inputs/orderOfBattle.csv
+  maxGunRange  ;Imported from simulation_inputs/orderOfBattle.csv
+  gunRateOfFire ;Imported from simulation_inputs/orderOfBattle.csv
+  bowGuns      ;Imported from simulation_inputs/orderOfBattle.csv
+  sternGuns    ;Imported from simulation_inputs/orderOfBattle.csv
+  portGuns     ;Imported from simulation_inputs/orderOfBattle.csv
+  starbGuns    ;Imported from simulation_inputs/orderOfBattle.csv
+  torpedoTubes ;Imported from simulation_inputs/orderOfBattle.csv
+  shipLength   ;Imported from simulation_inputs/orderOfBattle.csv
+  shipBeam     ;Imported from simulation_inputs/orderOfBattle.csv
+  hullPoints   ;Imported from simulation_inputs/orderOfBattle.csv
   damageTakenThisTick  ;calculated.
   lostHp       ;amount of HP ship has lost from max hp
   inContactWithEnemy ;True if enemy is within visual range
   sunk         ;calculated, 0=unsunk 1=sunk
   shipType
   shipClass
+  smoke-timer
+  smoke-generation-rate
 ]
 
 turtleTorpedoes-own [
@@ -93,7 +107,11 @@ to setup-constants
 end
 
 to setup-patches
-  ask patches [ set pcolor blue ]
+  ask patches [
+    set pcolor blue
+    set smoke 0
+    set visibility 100
+  ]
   set CurrentBrightness [palette:brightness] of patch 0 0
   set BrightnessReductionStep ( CurrentBrightness / (2 / 3 * ticksUntilDarkness)) ; cosmetic brightness of patches is reduced between sunset and naval twilight
 
@@ -101,11 +119,11 @@ to setup-patches
 end
 
 to setup-turtleShips
-  ;load the attributes of ships and their fleet from the orderOfBattle.csv
+  ;load the attributes of ships and their fleet from the simulation_inputs/orderOfBattle.csv
   file-close-all ;protects against unfinished setups that kept csv locked
 
-  file-open "orderOfBattle.csv"
-  if debug [print "=== Loading Ships from orderOfBattle.csv ==="]
+  file-open "simulation_inputs/orderOfBattle.csv"
+  if debug [print "=== Loading Ships from simulation_inputs/orderOfBattle.csv ==="]
   let csvHeadings csv:from-row file-read-line
   if debug [print csvHeadings]
   while [not file-at-end?][
@@ -141,6 +159,8 @@ to setup-turtleShips
       set sunk 0
       set damageTakenThisTick 0
       set lostHp 0
+      set smoke-timer 0
+      set smoke-generation-rate 0
     ]
   ]
   file-close-all
@@ -184,10 +204,10 @@ to load-DamageGlobals
   ;loads the chances of sustaining crtical damage and converts to breakpoints
 
   file-close-all ;protects against unfinished setups that kept csv locked
-  if debug [print "=== Loading Damage Breakpoints from *Class*Damage.csv ==="]
+  if debug [print "=== Loading Damage Breakpoints from simulation_inputs/*Class*Damage.csv ==="]
 
   if debug [print "loading Battleship Damage Breakpoints"]
-  file-open "battleShipDamage.csv"
+  file-open "simulation_inputs/battleShipDamage.csv"
   let csvHeadings csv:from-row file-read-line
   if debug [print csvHeadings]
   let rowdata csv:from-row file-read-line
@@ -231,6 +251,184 @@ to move-turtleTorpedoes
 
   ]
 end
+
+
+
+; ==========================================;
+; =========== SMOKE RELATED ================;
+; ==========================================;
+
+
+to load-SmokeGlobals
+  ;loads parameters regarding smokes
+
+  file-close-all ;protects against unfinished setups that kept csv locked
+  if debug [print "=== Loading Smoke Parameters from simulation_inputs/smoke.csv ==="]
+
+  let data csv:from-file "simulation_inputs/smoke.csv"
+  set SmokeParameters item 1 data
+  set ExplosionSmoke (item 3 data)
+  set EngineRoomSmoke (item 4 data)
+  set RudderSmoke (item 5 data)
+  set TurretSmoke (item 6 data)
+  if debug [print item 0 data]
+  if debug [print SmokeParameters]
+  file-close-all
+end
+
+to-report compute-weight [n sx sy windStrength]
+  ;; Calculates the weight of smoke diffusion based on wind strength
+  let base_weight 1
+  if (([pxcor] of n) > sx) and (([pycor] of n) < sy) [
+    set base_weight windStrength
+  ]
+  report base_weight * random-float 1
+end
+
+to-report blend-color [c1 c2 fraction]
+  ;; create mixed colors
+  let rgb1 c1
+  if (not is-list? c1) [
+    set rgb1 extract-rgb c1
+  ]
+  let rgb2 c2
+  if (not is-list? c2) [
+    set rgb2 extract-rgb c2
+  ]
+  let r1 item 0 rgb1
+  let g1 item 1 rgb1
+  let b1 item 2 rgb1
+  let r2 item 0 rgb2
+  let g2 item 1 rgb2
+  let b2 item 2 rgb2
+
+  let r ((r1 * (1 - fraction)) + (r2 * fraction))
+  let g ((g1 * (1 - fraction)) + (g2 * fraction))
+  let b ((b1 * (1 - fraction)) + (b2 * fraction))
+
+  report rgb (round r) (round g) (round b)
+end
+
+
+to update-ship-smoke
+  ;; Update the continuous generation of smoke for ships on fire ;;
+  ask turtleShips with [smoke-timer > 0] [
+    let smoke-gen smoke-generation-rate
+    set smoke-timer smoke-timer - 1
+    if patch-here != nobody [
+      ask patch-here [
+        set smoke smoke + smoke-gen
+      ]
+    ]
+  ]
+end
+
+to generate-smoke [target-ship smoke-time smoke-amount]
+;; helper function to generate smoke on the target ship with "smoke-amount" for "smoke-time" ticks
+  ask target-ship [
+    set smoke-generation-rate smoke-amount
+    set smoke-timer smoke-time
+  ]
+end
+
+; update smoke diffusion and decay each tick
+to update-smoke
+  if smoke-switch [
+    ;; Set parameters
+    let smoke_scale item 0 Smokeparameters                ; scaling for diffusion factor
+    let max_diffusion item 1 Smokeparameters           ; maximum diffusion factor
+    let min_diffusion item 2 Smokeparameters           ; base diffusion factor
+
+    let min_decay item 3 Smokeparameters               ; base decay factor
+    let decay_scale item 4 Smokeparameters              ; how quickly decay_factor approaches 1
+    let maxSmoke item 5 Smokeparameters                   ; visual thickness of the smoke. decreases with larger value
+    let windStrength item 6 Smokeparameters               ; Wind strength towards south east (range 1 ~ 5)
+
+    ;; Compute diffusion factor
+    let avgSmoke mean [smoke] of patches
+    let diffusion_factor min_diffusion + ((avgSmoke / smoke_scale))
+    if diffusion_factor > max_diffusion [ set diffusion_factor max_diffusion ]
+
+    ;; Diffusion towards SouthEast
+    ;; Reference:
+    ;; https://www.usni.org/magazines/proceedings/1940/january/effects-meteorological-conditions-tactical-operations-jutland#:~:text=The%20wind%2C%20at%20Jutland%2C%20was,was%20the%20more%20important%20factor.
+    ask patches [
+      if smoke > 0.05 [
+        let diffused smoke * diffusion_factor
+        set smoke smoke - diffused
+        let sx pxcor
+        let sy pycor
+
+        ;; get neigbors within 1 patch distance
+        let nbrs sort (neighbors)
+
+
+        ;; Weights for diffusion based on south east direction
+        if not empty? nbrs [
+          let weights []
+          foreach nbrs [ n ->
+            set weights lput (compute-weight n sx sy windStrength) weights
+          ]
+
+          ;; Distribute the diffused smoke proportionally.
+          let total_weight sum weights
+          if total_weight > 0 [
+            let index 0
+            foreach nbrs [
+              n ->
+              let w item index weights
+              ask n [ set smoke smoke + diffused * (w / total_weight) ]
+              set index index + 1
+            ]
+          ]
+        ]
+      ]
+    ]
+    ask patches [
+      ;; Decay and visual updates
+      let decay_factor min_decay + ((1 - min_decay) * (smoke / (smoke + decay_scale)))
+      set smoke smoke * decay_factor
+      ifelse smoke < 0.05 [
+        set smoke 0
+        set visibility 100
+        set pcolor blend-color pcolor black 0
+
+      ] [
+        let visibility_reduction 100 - smoke / 10
+        set visibility max list 0 (min list visibility_reduction 100)
+        let frac min (list (smoke / maxSmoke) 1)
+        set pcolor blend-color pcolor black frac
+      ]
+    ]
+  ]
+end
+; ==========================================;
+; ============   Accuracy  =================;
+; ==========================================;
+
+to-report line-of-sight-factor [shooter target]
+  let start-patch [patch-here] of shooter
+  let end-patch [patch-here] of target
+  let dist [distance target] of shooter
+  let nsteps max (list 1 floor dist)
+  let x (([pxcor] of end-patch - [pxcor] of start-patch) / nsteps)
+  let y (([pycor] of end-patch - [pycor] of start-patch) / nsteps)
+  let currentX [pxcor] of start-patch
+  let currentY [pycor] of start-patch
+  let minFactor 1.0
+  repeat nsteps [
+    let currentPatch patch (round currentX) (round currentY)
+    if currentPatch != nobody [
+      let patchVis ([visibility] of currentPatch) / 100
+      if patchVis < minFactor [ set minFactor patchVis ]
+    ]
+    set currentX currentX + x
+    set currentY currentY + y
+  ]
+  report minFactor
+end
+
+
 
 to-report checkForDet [shipAgent torpAgent]
  ;Takes ship agent and torp agent. Calculates prob of collision based on their orientation,
@@ -427,6 +625,7 @@ to shoot-turtleShips
 ;rotates 360 within a tick to maintain 'real' heading.
 
   ask turtleShips[
+
     let enemyShips turtleShips with [ fleet = [enemyFleet] of myself ] ;create agentset of all enemies
     let effectiveRange min list MaxVisibility maxGunRange
     ;bow guns: find enemies and fire turrents
@@ -460,8 +659,11 @@ end
 
 to fireTurrets [targetShip gunsInArc]
   if cosmetics = true [create-guntrack-to targetShip]
+
+  ;; Calculate line of sight visibility
+  let losFactor line-of-sight-factor self targetShip
   ;determine expected number of hits. Fractional hits ok.
-  let hitsOnTarget ( gunRateOfFire * twelveInchEquiv * gunsInArc * 0.02 )  ;PLACEHOLDER FOR GUNNERY MODEL 3% of shots fired at jutland hit. 1% penalty as placeholder for dusk and smoke
+  let hitsOnTarget ( gunRateOfFire * twelveInchEquiv * gunsInArc * 0.02 * losFactor)  ;PLACEHOLDER FOR GUNNERY MODEL 3% of shots fired at jutland hit. 1% penalty as placeholder for dusk and smoke
   ;add more complicated fromula based on hit distribution per "An analysis of the fighting". Some relevant variables are likely range and illumination/smoke
 
   ask patch-here [set pcolor grey] ;placeholder for now, creates patch of grey. could generate smoke once implemented
@@ -535,23 +737,67 @@ to checkForCriticalDamage
 end
 
 to sufferExplosion
+  ;;-----Smoke gen---------
+  if smoke-switch [
+    let initial item 0 ExplosionSmoke
+    let gensmoke item 1 ExplosionSmoke
+    let num_ticks item 2 ExplosionSmoke
+    ask patch-here [
+      if initial > 0 [set smoke initial]
+    ]
+      if gensmoke > 0 and num_ticks > 0 [generate-smoke self num_ticks gensmoke]
+  ]
+  ;; ---------------
   set damageTakenThisTick hullPoints
   if debug [show word [name] of self " has suffered a catastophic explosion!"]
 end
 
 to sufferEngineRoomHit
+  ;;-----Smoke gen---------
+  if smoke-switch [
+    let initial item 0 EngineRoomSmoke
+    let gensmoke item 1 EngineRoomSmoke
+    let num_ticks item 2 EngineRoomSmoke
+    ask patch-here [
+      if initial > 0 [set smoke initial]
+    ]
+    if (gensmoke > 0) and (num_ticks > 0) [generate-smoke self num_ticks gensmoke]
+  ]
+    ;;
   let reducedSpeed max (list 0 ([speed] of self / 2))
   set speed reducedSpeed
   if debug [show word [name] of self " has suffered a disabling hit to an engine room"]
 end
 
 to sufferRudderHit
+  ;;-----Smoke gen---------
+  if smoke-switch [
+    let initial item 0 RudderSmoke
+    let gensmoke item 1 RudderSmoke
+    let num_ticks item 2 RudderSmoke
+    ask patch-here [
+      if initial > 0 [set smoke initial]
+    ]
+      if gensmoke > 0 and num_ticks > 0 [generate-smoke self num_ticks gensmoke]
+  ]
+    ;;---------------------
   let reducedMaxTurn max (list 0 ([maxTurn] of self / 2 ))
   set maxturn reducedMaxTurn
   if debug [show word [name] of self " has suffered a disabling hit to her rudder"]
 end
 
 to sufferTurretHit
+  ;;-----Smoke gen---------
+  if smoke-switch [
+    let initial item 0 TurretSmoke
+    let gensmoke item 1 TurretSmoke
+    let num_ticks item 2 TurretSmoke
+    ask patch-here [
+      if initial > 0 [set smoke initial]
+    ]
+      if gensmoke > 0 and num_ticks > 0 [generate-smoke self num_ticks gensmoke]
+  ]
+    ;;
   if debug [show word [name] of self " has suffered a disabling hit to one of her turrets"]
   let randNum random 4
   (ifelse
@@ -613,6 +859,7 @@ to setup
   setup-patches
   setup-turtleShips
   load-DamageGlobals
+  load-SmokeGlobals
   reset-ticks
 end
 
@@ -628,6 +875,8 @@ to go
     reduce-visibility
     set-FleetInContact
     set-cosmetics
+    update-smoke
+    update-ship-smoke
     tick
   ]
 end
@@ -702,7 +951,7 @@ GermanDisengageSignalTick
 GermanDisengageSignalTick
 0
 10
-0.0
+7.0
 1
 1
 Tick
@@ -806,6 +1055,17 @@ MaxVisibility * 200
 0
 1
 11
+
+SWITCH
+43
+606
+174
+639
+smoke-switch
+smoke-switch
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1193,7 +1453,7 @@ NetLogo 6.4.0
   <experiment name="Monte Carlo" repetitions="10" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="70"/>
+    <timeLimit steps="100"/>
     <exitCondition>"FleetInContact" = FALSE</exitCondition>
     <metric>time:show SimTime "HH:mm:ss"</metric>
     <metric>count turtleShips with [fleet = "British"]</metric>
@@ -1216,6 +1476,9 @@ NetLogo 6.4.0
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="cosmetics">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="smoke-switch">
       <value value="false"/>
     </enumeratedValueSet>
     <steppedValueSet variable="BritishDelay" first="0" step="1" last="10"/>
